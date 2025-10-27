@@ -47,6 +47,7 @@
 .search-bar {
   position: relative;
   margin-bottom: 25px;
+  color: #333 !important;
 }
 
 .search-bar svg {
@@ -66,12 +67,14 @@
   font-size: 15px;
   transition: all 0.3s ease;
   background: white;
+  color: #999 !important; 
 }
 
 .search-bar input:focus {
   outline: none;
   border-color: #8a2be2;
   box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.1);
+  color: #333 !important; /* ← AGREGADO */
 }
 
 /* Tabla */

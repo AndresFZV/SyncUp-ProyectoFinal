@@ -1,23 +1,33 @@
 import React, { useState } from 'react';
 import './GestionComun.css';
-import { FaUpload, FaFileAlt, FaCheckCircle, FaTimesCircle, FaMusic, FaCompactDisc } from 'react-icons/fa';
+import { FaUpload, FaFileAlt, FaCheckCircle, FaTimesCircle, FaMusic, FaCompactDisc, FaFileArchive, FaImage } from 'react-icons/fa';
 
 const CargaMasiva = () => {
-  const [tipoArchivo, setTipoArchivo] = useState('canciones'); // 'canciones' o 'album'
-  const [archivo, setArchivo] = useState(null);
+  const [tipoArchivo, setTipoArchivo] = useState('canciones');
+  const [archivoTxt, setArchivoTxt] = useState(null);
+  const [archivoZip, setArchivoZip] = useState(null);
   const [imagenAlbum, setImagenAlbum] = useState(null);
   const [loading, setLoading] = useState(false);
   const [resultado, setResultado] = useState(null);
   const [errores, setErrores] = useState([]);
 
-  const handleFileChange = (e) => {
+  const handleTxtChange = (e) => {
     const file = e.target.files[0];
-    if (file && file.type === 'text/plain') {
-      setArchivo(file);
+    if (file && file.name.endsWith('.txt')) {
+      setArchivoTxt(file);
       setResultado(null);
       setErrores([]);
     } else {
       alert('Por favor selecciona un archivo .txt válido');
+    }
+  };
+
+  const handleZipChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.name.endsWith('.zip')) {
+      setArchivoZip(file);
+    } else {
+      alert('Por favor selecciona un archivo .zip válido');
     }
   };
 
@@ -31,8 +41,13 @@ const CargaMasiva = () => {
   };
 
   const handleCargarCanciones = async () => {
-    if (!archivo) {
-      alert('Por favor selecciona un archivo primero');
+    if (!archivoTxt) {
+      alert('Por favor selecciona el archivo .txt con la información');
+      return;
+    }
+
+    if (!archivoZip) {
+      alert('Por favor selecciona el archivo .zip con los MP3 e imágenes');
       return;
     }
 
@@ -41,7 +56,8 @@ const CargaMasiva = () => {
     setErrores([]);
 
     const formData = new FormData();
-    formData.append('archivo', archivo);
+    formData.append('archivoMetadata', archivoTxt);
+    formData.append('archivoMultimedia', archivoZip);
 
     try {
       const response = await fetch('http://localhost:8080/api/canciones/carga-masiva', {
@@ -52,6 +68,57 @@ const CargaMasiva = () => {
       if (response.ok) {
         const data = await response.json();
         setResultado(data);
+        setArchivoTxt(null);
+        setArchivoZip(null);
+      } else {
+        const error = await response.text();
+        setErrores([error]);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setErrores(['Error al procesar los archivos']);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCargarAlbum = async () => {
+    if (!archivoTxt) {
+      alert('Por favor selecciona el archivo metadata.txt');
+      return;
+    }
+
+    if (!imagenAlbum) {
+      alert('Por favor selecciona la imagen de portada del álbum');
+      return;
+    }
+
+    if (!archivoZip) {
+      alert('Por favor selecciona el archivo ZIP con las canciones');
+      return;
+    }
+
+    setLoading(true);
+    setResultado(null);
+    setErrores([]);
+
+    const formData = new FormData();
+    formData.append('archivoMetadata', archivoTxt);
+    formData.append('imagenPortada', imagenAlbum);
+    formData.append('archivoMultimedia', archivoZip);
+
+    try {
+      const response = await fetch('http://localhost:8080/api/albumes/carga-masiva', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setResultado(data);
+        setArchivoTxt(null);
+        setArchivoZip(null);
+        setImagenAlbum(null);
       } else {
         const error = await response.text();
         setErrores([error]);
@@ -64,44 +131,12 @@ const CargaMasiva = () => {
     }
   };
 
-  const handleCargarAlbum = async () => {
-    if (!archivo) {
-      alert('Por favor selecciona un archivo con las canciones');
-      return;
-    }
-
-    if (!imagenAlbum) {
-      alert('Por favor selecciona una imagen para el álbum');
-      return;
-    }
-
-    setLoading(true);
+  const resetForm = () => {
+    setArchivoTxt(null);
+    setArchivoZip(null);
+    setImagenAlbum(null);
     setResultado(null);
     setErrores([]);
-
-    const formData = new FormData();
-    formData.append('archivoCanciones', archivo);
-    formData.append('imagenAlbum', imagenAlbum);
-
-    try {
-      const response = await fetch('http://localhost:8080/api/albumes/carga-masiva', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setResultado(data);
-      } else {
-        const error = await response.text();
-        setErrores([error]);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      setErrores(['Error al procesar el archivo']);
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
@@ -116,10 +151,7 @@ const CargaMasiva = () => {
           className={`tipo-btn ${tipoArchivo === 'canciones' ? 'active' : ''}`}
           onClick={() => {
             setTipoArchivo('canciones');
-            setArchivo(null);
-            setImagenAlbum(null);
-            setResultado(null);
-            setErrores([]);
+            resetForm();
           }}
         >
           <FaMusic /> Canciones Sueltas
@@ -128,10 +160,7 @@ const CargaMasiva = () => {
           className={`tipo-btn ${tipoArchivo === 'album' ? 'active' : ''}`}
           onClick={() => {
             setTipoArchivo('album');
-            setArchivo(null);
-            setImagenAlbum(null);
-            setResultado(null);
-            setErrores([]);
+            resetForm();
           }}
         >
           <FaCompactDisc /> Álbum Completo
@@ -146,64 +175,100 @@ const CargaMasiva = () => {
             <FaFileAlt size={48} color="#8a2be2" />
             <h3>
               {tipoArchivo === 'canciones' 
-                ? 'Formato para Canciones Sueltas' 
-                : 'Formato para Álbum con Canciones'}
+                ? 'Carga Masiva de Canciones' 
+                : 'Carga Masiva de Álbum'}
             </h3>
             
             {tipoArchivo === 'canciones' ? (
               <>
-                <p>El archivo debe ser un .txt con el siguiente formato (una canción por línea):</p>
-                <div className="formato-ejemplo">
-                  <code>
-                    Titulo;ArtistaId;AlbumId;Genero;Duracion;Año;ImagenUrl<br/>
-                    Bohemian Rhapsody;artist123;;Rock;5.55;1975;https://...<br/>
-                    Imagine;artist456;album789;Pop;3.03;1971;https://...
-                  </code>
-                  <p style={{marginTop: '10px', fontSize: '13px', color: '#666'}}>
-                    * AlbumId puede estar vacío si la canción no pertenece a un álbum
-                  </p>
+                <p>Para cargar canciones necesitas 2 archivos:</p>
+                <div className="instrucciones">
+                  <div className="instruccion-item">
+                    <FaFileAlt size={24} color="#8a2be2" />
+                    <div>
+                      <h4>1. Archivo .txt con la metadata</h4>
+                      <p>Formato: <code>Titulo;ArtistaId;AlbumId;Genero;Año;NombreArchivoImagen;NombreArchivoMP3</code></p>
+                      <div className="formato-ejemplo">
+                        <code>
+                          Self Control;68fe886b5b18bf241dbe48f0;68fe89ec0b89c4bb48987a88;R&B;2016;Self Control.jpeg;Self Control.mp3<br/>
+                          Ivy;68fe886b5b18bf241dbe48f0;68fe89ec0b89c4bb48987a88;Soul;2016;Ivy.jpeg;Ivy.mp3
+                        </code>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="instruccion-item">
+                    <FaFileArchive size={24} color="#f39c12" />
+                    <div>
+                      <h4>2. Archivo .zip con MP3 e imágenes</h4>
+                      <p>Debe contener todos los archivos mencionados en el .txt:</p>
+                      <ul>
+                        <li>Self Control.jpeg</li>
+                        <li>Self Control.mp3</li>
+                        <li>Ivy.jpeg</li>
+                        <li>Ivy.mp3</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </>
             ) : (
               <>
-                <p>Para subir un álbum completo necesitas:</p>
-                <ol style={{textAlign: 'left', marginTop: '15px', paddingLeft: '20px'}}>
-                  <li>Un archivo .txt con la información del álbum y sus canciones</li>
-                  <li>Una imagen para la portada del álbum</li>
-                </ol>
-                <div className="formato-ejemplo">
-                  <code>
-                    # Primera línea: Info del álbum<br/>
-                    AlbumNombre;ArtistaId;Descripcion;BgColor<br/>
-                    Blonde;artist123;Álbum experimental;#F5E6CC<br/>
-                    <br/>
-                    # Siguientes líneas: Canciones del álbum<br/>
-                    Titulo;Genero;Duracion;Año<br/>
-                    Nikes;R&B;5.14;2016<br/>
-                    Ivy;Soul;4.09;2016<br/>
-                    Pink + White;Pop;3.04;2016
-                  </code>
+                <p>Para cargar un álbum completo necesitas 3 archivos:</p>
+                <div className="instrucciones">
+                  <div className="instruccion-item">
+                    <FaFileAlt size={24} color="#8a2be2" />
+                    <div>
+                      <h4>1. Archivo metadata.txt con info del álbum y canciones</h4>
+                      <div className="formato-ejemplo">
+                        <code>
+                          # Primera línea: Álbum<br/>
+                          IGOR;68fef4656178bfb43caf8131;Álbum conceptual;#F8C8DC<br/>
+                          <br/>
+                          # Siguientes líneas: Canciones<br/>
+                          EARFQUAKE;R&B;2019;EARFQUAKE.jpg;EARFQUAKE.mp3<br/>
+                          I THINK;Hip-Hop;2019;I THINK.jpg;I THINK.mp3
+                        </code>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="instruccion-item">
+                    <FaImage size={24} color="#e91e63" />
+                    <div>
+                      <h4>2. Imagen de portada del álbum</h4>
+                      <p>Imagen JPG/PNG que se usará como portada del álbum</p>
+                    </div>
+                  </div>
+
+                  <div className="instruccion-item">
+                    <FaFileArchive size={24} color="#f39c12" />
+                    <div>
+                      <h4>3. Archivo .zip con MP3 e imágenes de canciones</h4>
+                      <p>Debe contener los archivos de cada canción (NO incluir metadata.txt ni portada aquí)</p>
+                    </div>
+                  </div>
                 </div>
               </>
             )}
           </div>
 
-          {/* Upload de archivo .txt */}
+          {/* Upload de archivo .txt o metadata.txt según el tipo */}
           <div className="upload-box">
             <input
               type="file"
-              id="file-upload"
+              id="txt-upload"
               accept=".txt"
-              onChange={handleFileChange}
+              onChange={handleTxtChange}
               style={{ display: 'none' }}
             />
-            <label htmlFor="file-upload" className="upload-label">
-              <FaUpload size={32} />
-              <p>{archivo ? archivo.name : 'Seleccionar archivo .txt'}</p>
+            <label htmlFor="txt-upload" className="upload-label">
+              <FaFileAlt size={32} />
+              <p>{archivoTxt ? `✓ ${archivoTxt.name}` : `Seleccionar ${tipoArchivo === 'canciones' ? 'archivo .txt' : 'metadata.txt'}`}</p>
             </label>
           </div>
 
-          {/* Upload de imagen (solo para álbum) */}
+          {/* Upload de imagen del álbum (solo para álbum) */}
           {tipoArchivo === 'album' && (
             <div className="upload-box" style={{marginTop: '20px'}}>
               <input
@@ -214,20 +279,40 @@ const CargaMasiva = () => {
                 style={{ display: 'none' }}
               />
               <label htmlFor="image-upload" className="upload-label">
-                <FaCompactDisc size={32} />
-                <p>{imagenAlbum ? imagenAlbum.name : 'Seleccionar imagen del álbum'}</p>
+                <FaImage size={32} />
+                <p>{imagenAlbum ? `✓ ${imagenAlbum.name}` : 'Seleccionar portada del álbum'}</p>
               </label>
             </div>
           )}
 
+          {/* Upload de archivo .zip */}
+          <div className="upload-box" style={{marginTop: '20px'}}>
+            <input
+              type="file"
+              id="zip-upload"
+              accept=".zip"
+              onChange={handleZipChange}
+              style={{ display: 'none' }}
+            />
+            <label htmlFor="zip-upload" className="upload-label">
+              <FaFileArchive size={48} />
+              <p>{archivoZip ? `✓ ${archivoZip.name}` : 'Seleccionar archivo .zip con MP3 e imágenes'}</p>
+              <span style={{fontSize: '13px', color: '#666'}}>
+                {tipoArchivo === 'canciones' 
+                  ? 'Debe contener MP3 + imágenes'
+                  : 'Debe contener MP3 + imágenes de canciones'}
+              </span>
+            </label>
+          </div>
+
           {/* Botón de carga */}
-          {archivo && (tipoArchivo === 'canciones' || imagenAlbum) && (
+          {archivoTxt && archivoZip && (tipoArchivo === 'canciones' || imagenAlbum) && (
             <button 
               className="btn-primary btn-cargar" 
               onClick={tipoArchivo === 'canciones' ? handleCargarCanciones : handleCargarAlbum}
               disabled={loading}
             >
-              {loading ? 'Cargando...' : `Cargar ${tipoArchivo === 'canciones' ? 'Canciones' : 'Álbum'}`}
+              {loading ? 'Procesando...' : `Cargar ${tipoArchivo === 'canciones' ? 'Canciones' : 'Álbum'}`}
             </button>
           )}
         </div>
@@ -295,7 +380,7 @@ const CargaMasiva = () => {
         }
 
         .carga-masiva-content {
-          max-width: 900px;
+          max-width: 1000px;
           margin: 0 auto;
         }
 
@@ -313,27 +398,68 @@ const CargaMasiva = () => {
         }
 
         .upload-info h3 {
-          margin: 15px 0 10px;
-          font-size: 20px;
+          margin: 15px 0 20px;
+          font-size: 24px;
           color: #333;
         }
 
         .upload-info p {
           color: #666;
-          margin-bottom: 15px;
+          margin-bottom: 20px;
+          font-size: 16px;
+        }
+
+        .instrucciones {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+          margin-top: 20px;
+        }
+
+        .instruccion-item {
+          display: flex;
+          gap: 15px;
+          align-items: flex-start;
+          text-align: left;
+          padding: 20px;
+          background: #f8f9fa;
+          border-radius: 12px;
+        }
+
+        .instruccion-item h4 {
+          margin: 0 0 8px 0;
+          font-size: 16px;
+          color: #333;
+        }
+
+        .instruccion-item p {
+          margin: 0;
+          font-size: 14px;
+          color: #666;
+        }
+
+        .instruccion-item ul {
+          margin: 8px 0 0 0;
+          padding-left: 20px;
+        }
+
+        .instruccion-item li {
+          font-size: 13px;
+          color: #666;
+          margin: 3px 0;
         }
 
         .formato-ejemplo {
-          background: #f8f9fa;
-          padding: 20px;
-          border-radius: 10px;
-          text-align: left;
-          margin-top: 15px;
+          background: white;
+          padding: 15px;
+          border-radius: 8px;
+          margin-top: 10px;
+          border: 1px solid #e0e0e0;
         }
 
         .formato-ejemplo code {
           font-family: 'Courier New', monospace;
-          font-size: 13px;
+          font-size: 12px;
           color: #333;
           line-height: 1.8;
         }
@@ -347,12 +473,14 @@ const CargaMasiva = () => {
           flex-direction: column;
           align-items: center;
           gap: 15px;
-          padding: 40px 60px;
+          padding: 30px 50px;
           border: 3px dashed #8a2be2;
           border-radius: 15px;
           cursor: pointer;
           transition: all 0.3s ease;
           background: #f8f4ff;
+          width: 100%;
+          max-width: 500px;
         }
 
         .upload-label:hover {
@@ -362,15 +490,17 @@ const CargaMasiva = () => {
 
         .upload-label p {
           margin: 0;
-          font-size: 16px;
+          font-size: 15px;
           font-weight: 600;
           color: #8a2be2;
         }
 
         .btn-cargar {
-          margin-top: 20px;
+          margin-top: 30px;
           width: 100%;
-          max-width: 300px;
+          max-width: 400px;
+          padding: 15px;
+          font-size: 18px;
         }
 
         .resultado-box {
@@ -413,7 +543,7 @@ const CargaMasiva = () => {
           color: #666;
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
           .tipo-selector {
             flex-direction: column;
           }
@@ -421,6 +551,12 @@ const CargaMasiva = () => {
           .tipo-btn {
             width: 100%;
             justify-content: center;
+          }
+
+          .instruccion-item {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
           }
         }
       `}</style>

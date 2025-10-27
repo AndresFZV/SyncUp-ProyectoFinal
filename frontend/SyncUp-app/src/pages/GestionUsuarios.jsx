@@ -8,7 +8,7 @@ const GestionUsuarios = () => {
   const [loading, setLoading] = useState(false);
   const [ordenamiento, setOrdenamiento] = useState({
     campo: null,
-    direccion: 'asc' // 'asc' o 'desc'
+    direccion: 'asc'
   });
 
   useEffect(() => {
@@ -16,6 +16,7 @@ const GestionUsuarios = () => {
   }, []);
 
   const cargarUsuarios = async () => {
+    setLoading(true);
     try {
       const response = await fetch('http://localhost:8080/api/usuarios');
       if (response.ok) {
@@ -24,6 +25,8 @@ const GestionUsuarios = () => {
       }
     } catch (error) {
       console.error('Error al cargar usuarios:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -47,7 +50,6 @@ const GestionUsuarios = () => {
   const handleOrdenar = (campo) => {
     let direccion = 'asc';
     
-    // Si ya está ordenado por este campo, invertir la dirección
     if (ordenamiento.campo === campo && ordenamiento.direccion === 'asc') {
       direccion = 'desc';
     }
@@ -64,9 +66,9 @@ const GestionUsuarios = () => {
         let valorB = b[ordenamiento.campo];
 
         // Manejar campos especiales
-        if (ordenamiento.campo === 'seguidores' || ordenamiento.campo === 'siguiendo') {
-          valorA = a[ordenamiento.campo]?.length || 0;
-          valorB = b[ordenamiento.campo]?.length || 0;
+        if (ordenamiento.campo === 'cantidadSeguidores' || ordenamiento.campo === 'cantidadSiguiendo') {
+          valorA = a[ordenamiento.campo] || 0;
+          valorB = b[ordenamiento.campo] || 0;
         }
 
         // Comparación para strings
@@ -75,7 +77,6 @@ const GestionUsuarios = () => {
           valorB = valorB.toLowerCase();
         }
 
-        // Ordenar
         if (valorA < valorB) {
           return ordenamiento.direccion === 'asc' ? -1 : 1;
         }
@@ -131,47 +132,47 @@ const GestionUsuarios = () => {
 
       <div className="table-container">
         <table className="data-table">
-<thead>
-  <tr>
-    <th onClick={() => handleOrdenar('username')} className="sortable">
-      <div className="th-content">
-        Username 
-        <span className="sort-icon-container">{renderIconoOrdenamiento('username')}</span>
-      </div>
-    </th>
-    <th onClick={() => handleOrdenar('nombre')} className="sortable">
-      <div className="th-content">
-        Nombre 
-        <span className="sort-icon-container">{renderIconoOrdenamiento('nombre')}</span>
-      </div>
-    </th>
-    <th onClick={() => handleOrdenar('correo')} className="sortable">
-      <div className="th-content">
-        Correo 
-        <span className="sort-icon-container">{renderIconoOrdenamiento('correo')}</span>
-      </div>
-    </th>
-    <th onClick={() => handleOrdenar('edad')} className="sortable">
-      <div className="th-content">
-        Edad 
-        <span className="sort-icon-container">{renderIconoOrdenamiento('edad')}</span>
-      </div>
-    </th>
-    <th onClick={() => handleOrdenar('seguidores')} className="sortable">
-      <div className="th-content">
-        Seguidores 
-        <span className="sort-icon-container">{renderIconoOrdenamiento('seguidores')}</span>
-      </div>
-    </th>
-    <th onClick={() => handleOrdenar('siguiendo')} className="sortable">
-      <div className="th-content">
-        Siguiendo 
-        <span className="sort-icon-container">{renderIconoOrdenamiento('siguiendo')}</span>
-      </div>
-    </th>
-    <th>Acciones</th>
-  </tr>
-</thead>
+          <thead>
+            <tr>
+              <th onClick={() => handleOrdenar('username')} className="sortable">
+                <div className="th-content">
+                  Username 
+                  <span className="sort-icon-container">{renderIconoOrdenamiento('username')}</span>
+                </div>
+              </th>
+              <th onClick={() => handleOrdenar('nombre')} className="sortable">
+                <div className="th-content">
+                  Nombre 
+                  <span className="sort-icon-container">{renderIconoOrdenamiento('nombre')}</span>
+                </div>
+              </th>
+              <th onClick={() => handleOrdenar('correo')} className="sortable">
+                <div className="th-content">
+                  Correo 
+                  <span className="sort-icon-container">{renderIconoOrdenamiento('correo')}</span>
+                </div>
+              </th>
+              <th onClick={() => handleOrdenar('edad')} className="sortable">
+                <div className="th-content">
+                  Edad 
+                  <span className="sort-icon-container">{renderIconoOrdenamiento('edad')}</span>
+                </div>
+              </th>
+              <th onClick={() => handleOrdenar('cantidadSeguidores')} className="sortable">
+                <div className="th-content">
+                  Seguidores 
+                  <span className="sort-icon-container">{renderIconoOrdenamiento('cantidadSeguidores')}</span>
+                </div>
+              </th>
+              <th onClick={() => handleOrdenar('cantidadSiguiendo')} className="sortable">
+                <div className="th-content">
+                  Siguiendo 
+                  <span className="sort-icon-container">{renderIconoOrdenamiento('cantidadSiguiendo')}</span>
+                </div>
+              </th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
           <tbody>
             {usuariosParaMostrar.map((usuario) => (
               <tr key={usuario.username}>
@@ -184,8 +185,16 @@ const GestionUsuarios = () => {
                 <td>{usuario.nombre}</td>
                 <td>{usuario.correo}</td>
                 <td>{usuario.edad}</td>
-                <td>{usuario.seguidores?.length || 0}</td>
-                <td>{usuario.siguiendo?.length || 0}</td>
+                <td>
+                  <span title={usuario.seguidoresNombres?.length > 0 ? `Lo siguen: ${usuario.seguidoresNombres.join(', ')}` : 'Sin seguidores'}>
+                    {usuario.cantidadSeguidores || 0}
+                  </span>
+                </td>
+                <td>
+                  <span title={usuario.siguiendoNombres?.length > 0 ? `Sigue a: ${usuario.siguiendoNombres.join(', ')}` : 'No sigue a nadie'}>
+                    {usuario.cantidadSiguiendo || 0}
+                  </span>
+                </td>
                 <td>
                   <div className="action-buttons">
                     <button 
@@ -207,49 +216,63 @@ const GestionUsuarios = () => {
         )}
       </div>
 
-<style jsx>{`
-  .sortable {
-    cursor: pointer;
-    user-select: none;
-    transition: background-color 0.2s;
-  }
+      <style jsx>{`
+        .sortable {
+          cursor: pointer;
+          user-select: none;
+          transition: background-color 0.2s;
+        }
 
-  .sortable:hover {
-    background-color: rgba(138, 43, 226, 0.1);
-  }
+        .sortable:hover {
+          background-color: rgba(138, 43, 226, 0.1);
+        }
 
-  .th-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
+        .th-content {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+        }
 
-  .sort-icon-container {
-    display: flex;
-    align-items: center;
-    min-width: 16px;
-  }
+        .sort-icon-container {
+          display: flex;
+          align-items: center;
+          min-width: 16px;
+        }
 
-  .sort-icon {
-    font-size: 14px;
-    opacity: 0.3;
-    transition: opacity 0.2s;
-  }
+        .sort-icon {
+          font-size: 14px;
+          opacity: 0.3;
+          transition: opacity 0.2s;
+        }
 
-  .sortable:hover .sort-icon {
-    opacity: 0.6;
-  }
+        .sortable:hover .sort-icon {
+          opacity: 0.6;
+        }
 
-  .sort-icon.active {
-    opacity: 1;
-    color: #8a2be2;
-  }
+        .sort-icon.active {
+          opacity: 1;
+          color: #8a2be2;
+        }
 
-  .data-table th {
-    white-space: nowrap;
-  }
-`}</style>
+        .data-table th {
+          white-space: nowrap;
+        }
+
+        .stats {
+          display: flex;
+          gap: 10px;
+        }
+
+        .stat-badge {
+          background: linear-gradient(135deg, #8a2be2, #6a1bb2);
+          color: white;
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-size: 14px;
+          font-weight: 600;
+        }
+      `}</style>
     </div>
   );
 };

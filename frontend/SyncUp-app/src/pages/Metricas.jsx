@@ -25,31 +25,28 @@ const cargarMetricas = async () => {
     const cancionesRes = await fetch('http://localhost:8080/api/canciones');
     const canciones = await cancionesRes.json();
 
-    // Obtener usuarios
-    const usuariosRes = await fetch('http://localhost:8080/api/usuarios');
-    const usuarios = await usuariosRes.json();
-
-    // Obtener artistas directamente
+    // Obtener artistas
     const artistasRes = await fetch('http://localhost:8080/api/artistas');
     const artistas = await artistasRes.json();
+
+    // Obtener usuarios más seguidos (este endpoint ya funciona bien)
+    const usuariosMasSeguidosRes = await fetch('http://localhost:8080/api/usuarios/mas-seguidos');
+    const usuariosMasSeguidos = await usuariosMasSeguidosRes.json();
 
     // Procesar datos
     const generos = {};
     const cancionesPorArtista = {};
 
     canciones.forEach(cancion => {
-      // Contar géneros
       if (cancion.genero) {
         generos[cancion.genero] = (generos[cancion.genero] || 0) + 1;
       }
       
-      // Contar canciones por artista usando artistaNombre
       if (cancion.artistaNombre) {
         cancionesPorArtista[cancion.artistaNombre] = (cancionesPorArtista[cancion.artistaNombre] || 0) + 1;
       }
     });
 
-    // Convertir a arrays para los gráficos
     const cancionesPorGenero = Object.entries(generos).map(([name, value]) => ({
       name,
       value
@@ -63,29 +60,21 @@ const cargarMetricas = async () => {
         canciones
       }));
 
-    // Usuarios más seguidos (ordenados por cantidad de seguidores)
-    const usuariosOrdenados = usuarios
-      .sort((a, b) => (b.seguidores?.length || 0) - (a.seguidores?.length || 0))
+    const usuariosActivos = usuariosMasSeguidos
       .slice(0, 5)
       .map(u => ({
         name: u.username,
-        seguidores: u.seguidores?.length || 0
+        seguidores: u.seguidores,
+        listaSeguidores: u.listaSeguidores || []
       }));
-
-    console.log('📊 DEBUG MÉTRICAS:');
-    console.log('Total canciones:', canciones.length);
-    console.log('Total usuarios:', usuarios.length);
-    console.log('Total artistas:', artistas.length);
-    console.log('Artistas en BD:', artistas.map(a => a.nombre));
-    console.log('Canciones por artista:', cancionesPorArtista);
 
     setMetricas({
       totalCanciones: canciones.length,
-      totalUsuarios: usuarios.length,
-      totalArtistas: artistas.length, // ← Usar el count directo de artistas
+      totalUsuarios: usuariosMasSeguidos.length,
+      totalArtistas: artistas.length,
       cancionesPorGenero,
       artistasPopulares,
-      usuariosActivos: usuariosOrdenados
+      usuariosActivos
     });
   } catch (error) {
     console.error('Error al cargar métricas:', error);
@@ -93,7 +82,6 @@ const cargarMetricas = async () => {
     setLoading(false);
   }
 };
-
   const COLORS = ['#8a2be2', '#6a1bb2', '#ff6b9d', '#4ecdc4', '#45b7d1', '#f7b731', '#5f27cd', '#00d2d3'];
 
   if (loading) {
@@ -190,20 +178,91 @@ const cargarMetricas = async () => {
           </ResponsiveContainer>
         </div>
 
-        {/* Line Chart - Usuarios con más seguidores */}
-        <div className="chart-container full-width">
-          <h3>Usuarios Más Seguidos</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={metricas.usuariosActivos}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="seguidores" stroke="#8a2be2" strokeWidth={3} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+{/* Line Chart - Usuarios con más seguidores */}
+<div className="chart-container full-width">
+  <h3>Usuarios Más Seguidos</h3>
+  <ResponsiveContainer width="100%" height={300}>
+    <LineChart data={metricas.usuariosActivos}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="name" />
+      <YAxis />
+      <Tooltip 
+        content={({ active, payload }) => {
+          if (active && payload && payload.length) {
+            const data = payload[0].payload;
+            return (
+              <div style={{
+                background: 'white',
+                padding: '15px',
+                border: '2px solid #8a2be2',
+                borderRadius: '10px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                minWidth: '200px'
+              }}>
+                <p style={{ 
+                  margin: '0 0 8px 0', 
+                  fontWeight: 'bold', 
+                  color: '#8a2be2',
+                  fontSize: '16px'
+                }}>
+                  {data.name}
+                </p>
+                <p style={{ 
+                  margin: '0 0 8px 0', 
+                  color: '#333',
+                  fontWeight: '600'
+                }}>
+                  {data.seguidores} seguidores
+                </p>
+                {data.listaSeguidores && data.listaSeguidores.length > 0 && (
+                  <div style={{ 
+                    marginTop: '10px',
+                    paddingTop: '10px',
+                    borderTop: '1px solid #e0e0e0'
+                  }}>
+                    <p style={{ 
+                      margin: '0 0 5px 0', 
+                      fontSize: '12px', 
+                      color: '#666',
+                      fontWeight: '600'
+                    }}>
+                      Lo siguen:
+                    </p>
+                    <ul style={{ 
+                      margin: 0, 
+                      paddingLeft: '20px',
+                      fontSize: '13px',
+                      color: '#555'
+                    }}>
+                      {data.listaSeguidores.map((seguidor, idx) => (
+                        <li key={idx} style={{ marginBottom: '3px' }}>
+                          {seguidor}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {(!data.listaSeguidores || data.listaSeguidores.length === 0) && (
+                  <p style={{ 
+                    margin: '10px 0 0 0', 
+                    fontSize: '12px', 
+                    color: '#999',
+                    fontStyle: 'italic'
+                  }}>
+                    Sin seguidores
+                  </p>
+                )}
+              </div>
+            );
+          }
+          return null;
+        }}
+      />
+      <Legend />
+      <Line type="monotone" dataKey="seguidores" stroke="#8a2be2" strokeWidth={3} />
+    </LineChart>
+  </ResponsiveContainer>
+</div>
       </div>
 
       <style jsx>{`

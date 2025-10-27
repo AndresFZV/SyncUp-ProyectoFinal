@@ -91,15 +91,20 @@ public class AlbumController {
     }
 
     // Agregar este método al AlbumController
-
     @PostMapping("/carga-masiva")
     public ResponseEntity<?> cargaMasivaAlbum(
-            @RequestParam("archivoCanciones") MultipartFile archivoCanciones,
-            @RequestParam("imagenAlbum") MultipartFile imagenAlbum) {
+            @RequestParam("archivoMetadata") MultipartFile archivoMetadata,
+            @RequestParam("imagenPortada") MultipartFile imagenPortada,
+            @RequestParam("archivoMultimedia") MultipartFile archivoMultimedia) {
         try {
-            Map<String, Object> resultado = albumService.cargaMasivaAlbum(archivoCanciones, imagenAlbum);
+            Map<String, Object> resultado = albumService.cargaMasivaAlbumConTresArchivos(
+                    archivoMetadata,      // metadata.txt
+                    imagenPortada,        // portada del álbum
+                    archivoMultimedia     // ZIP con MP3 e imágenes
+            );
             return ResponseEntity.ok(resultado);
         } catch (Exception e) {
+            e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", true);
             errorResponse.put("mensaje", e.getMessage());

@@ -10,9 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -83,14 +82,77 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.seguirUsuario(username, aSeguir));
     }
 
+    @PostMapping("/{username}/seguir/{usernameASeguir}")
+    public ResponseEntity<?> seguirUsuarioPorUsername(
+            @PathVariable String username,
+            @PathVariable String usernameASeguir) {
+        try {
+            Usuario usuarioASeguir = usuarioService.buscarIdentificador(usernameASeguir);
+            usuarioService.seguirUsuario(username, usuarioASeguir);
+
+            Map<String, String> respuesta = new HashMap<>();
+            respuesta.put("mensaje", "Ahora sigues a " + usernameASeguir);
+            return ResponseEntity.ok(respuesta);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
     @PostMapping("/{username}/dejar-seguir")
     public ResponseEntity<?> dejarDeSeguirUsuario(@PathVariable String username, @RequestBody Usuario aDejar) {
         return ResponseEntity.ok(usuarioService.dejarDeSeguirUsuario(username, aDejar));
     }
 
     @GetMapping
-    public ResponseEntity<List<Usuario>> listarUsuarios() {
-        return ResponseEntity.ok(usuarioService.listarUsuarios());
+    public ResponseEntity<List<Map<String, Object>>> listarUsuarios() {
+        try {
+            List<Usuario> usuarios = usuarioService.listarUsuarios();
+
+            List<Map<String, Object>> usuariosSimples = usuarios.stream()
+                    .map(usuario -> {
+                        Map<String, Object> data = new HashMap<>();
+                        data.put("username", usuario.getUsername());
+                        data.put("nombre", usuario.getNombre());
+                        data.put("correo", usuario.getCorreo());
+                        data.put("edad", usuario.getEdad());
+
+                        // Contar seguidores de forma segura
+                        int cantidadSeguidores = 0;
+                        List<String> seguidoresNombres = new ArrayList<>();
+                        if (usuario.getSeguidores() != null) {
+                            cantidadSeguidores = usuario.getSeguidores().size();
+                            seguidoresNombres = usuario.getSeguidores().stream()
+                                    .filter(Objects::nonNull)
+                                    .map(Usuario::getUsername)
+                                    .filter(Objects::nonNull)
+                                    .collect(Collectors.toList());
+                        }
+                        data.put("cantidadSeguidores", cantidadSeguidores);
+                        data.put("seguidoresNombres", seguidoresNombres);
+
+                        // Contar siguiendo de forma segura
+                        int cantidadSiguiendo = 0;
+                        List<String> siguiendoNombres = new ArrayList<>();
+                        if (usuario.getSiguiendo() != null) {
+                            cantidadSiguiendo = usuario.getSiguiendo().size();
+                            siguiendoNombres = usuario.getSiguiendo().stream()
+                                    .filter(Objects::nonNull)
+                                    .map(Usuario::getUsername)
+                                    .filter(Objects::nonNull)
+                                    .collect(Collectors.toList());
+                        }
+                        data.put("cantidadSiguiendo", cantidadSiguiendo);
+                        data.put("siguiendoNombres", siguiendoNombres);
+
+                        return data;
+                    })
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(usuariosSimples);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ArrayList<>());
+        }
     }
 
     @GetMapping("/buscar")
@@ -131,6 +193,45 @@ public class UsuarioController {
             return ResponseEntity.ok("Contraseña actualizada exitosamente");
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/mas-seguidos")
+    public ResponseEntity<List<Map<String, Object>>> getUsuariosMasSeguidos() {
+        try {
+            List<Usuario> usuarios = usuarioService.listarUsuarios();
+
+            List<Map<String, Object>> usuariosMasSeguidos = usuarios.stream()
+                    .map(usuario -> {
+                        Map<String, Object> data = new HashMap<>();
+                        data.put("username", usuario.getUsername());
+                        data.put("nombre", usuario.getNombre());
+
+                        int cantidadSeguidores = 0;
+                        List<String> nombresSeguidores = new ArrayList<>();
+
+                        if (usuario.getSeguidores() != null) {
+                            cantidadSeguidores = usuario.getSeguidores().size();
+                            nombresSeguidores = usuario.getSeguidores().stream()
+                                    .filter(Objects::nonNull)
+                                    .map(Usuario::getUsername)
+                                    .filter(Objects::nonNull)
+                                    .collect(Collectors.toList());
+                        }
+
+                        data.put("seguidores", cantidadSeguidores);
+                        data.put("listaSeguidores", nombresSeguidores);
+
+                        return data;
+                    })
+                    .sorted((a, b) -> Integer.compare((Integer) b.get("seguidores"), (Integer) a.get("seguidores")))
+                    .limit(10)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(usuariosMasSeguidos);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ArrayList<>());
         }
     }
 }

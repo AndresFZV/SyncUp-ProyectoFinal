@@ -95,15 +95,19 @@ public class CancionController {
     }
 
     // Carga masiva
+    // Carga masiva con ZIP
     @PostMapping("/carga-masiva")
-    public ResponseEntity<?> cargaMasiva(@RequestParam("archivo") MultipartFile archivo) {
+    public ResponseEntity<?> cargaMasiva(
+            @RequestParam("archivoMetadata") MultipartFile archivoMetadata,
+            @RequestParam("archivoMultimedia") MultipartFile archivoMultimedia) {
         try {
-            int cancionesCargadas = cancionService.cargaMasiva(archivo);
+            int cancionesCargadas = cancionService.cargaMasivaConArchivos(archivoMetadata, archivoMultimedia);
             Map<String, Object> response = new HashMap<>();
             response.put("cancionesCargadas", cancionesCargadas);
             response.put("total", cancionesCargadas);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
