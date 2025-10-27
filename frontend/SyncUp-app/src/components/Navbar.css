@@ -1,0 +1,137 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 70px;
+  background-color: #0f0f0f;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  z-index: 1000;
+  box-sizing: border-box;
+}
+
+.logo-img {
+  height: 210px; /* ajusta según tu diseño */
+  width: auto;
+  cursor: pointer;
+}
+
+.nav-links {
+  display: flex;
+}
+
+/* ==== ESTILO BASE DE BOTONES ==== */
+button {
+  outline: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 1s ease, background-color 0.3s ease;
+}
+
+button:active {
+  animation: bounceClick 1s ease; /* 🔧 Añadido: animación personalizada al hacer clic */
+}
+
+/* ==== ANIMACIÓN DE REBOTE ==== */
+@keyframes bounceClick {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(0.9);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ==== BOTONES DE NAVEGACIÓN ==== */
+.btn-caracteristicas,
+.btn-sobreNosotros {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0;
+  margin-left: 20px;
+  cursor: pointer;
+  transition: color 0.3s ease, transform 0.2s ease;
+  outline: none; /* quita el borde de foco */
+  box-shadow: none; /* elimina sombras del navegador */
+  appearance: none; /* evita estilos nativos */
+}
+
+/* Hover con sutil animación */
+.btn-caracteristicas:hover,
+.btn-sobreNosotros:hover {
+  color: #a435f0;
+  transform: translateY(-2px);
+  text-decoration: underline;
+}
+
+/* Al hacer clic o mantener presionado */
+.btn-caracteristicas:active,
+.btn-sobreNosotros:active {
+  background: none;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  transform: translateY(0);
+  animation: none; /* quita rebote */
+}
+
+/* Evitar el borde púrpura de accesibilidad */
+.btn-caracteristicas:focus,
+.btn-sobreNosotros:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+
+
+
+.btn-login,
+.btn-register {
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 20px;
+  padding: 8px 15px;
+  margin-left: 10px;
+}
+
+/* ==== BOTONES NORMALES ==== */
+.btn-caracteristicas,
+.btn-sobreNosotros {
+  background: none;
+  color: white;
+  transition: 0.3s;
+}
+
+.btn-caracteristicas:hover,
+.btn-sobreNosotros:hover {
+  color: #a435f0;
+}
+
+/* ==== BOTONES DE ACCIÓN ==== */
+.btn-login,
+.btn-register {
+  background-color: #a435f0;
+  color: white;
+  transition: 0.3s;
+}
+
+.btn-login:hover {
+  background-color: #8a2be2;
+}
+
+.btn-register:hover {
+  background-color: #8a2be2;
+}

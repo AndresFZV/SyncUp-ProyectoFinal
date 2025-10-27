@@ -1,0 +1,85 @@
+/* ===================== VARIABLES ===================== */
+:root {
+  --font-main: "Deezer Brand", "Tahoma", sans-serif;
+  --title-fontsize: 64px;
+  --subtitle-fontsize: 24px;
+  --text-color: #000;
+  --accent-color: #a435f0;
+}
+
+/* ===================== HOME ===================== */
+.home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #fff;
+  padding: 0 5%;
+  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+  text-align: center;
+  font-family: var(--font-main);
+}
+
+/* ===================== CONTENIDO ===================== */
+.content {
+  max-width: 900px;
+  z-index: 2;
+  color: var(--text-color);
+}
+
+/* ===================== TÍTULO ===================== */
+.content h1 {
+  font-size: var(--title-fontsize);
+  font-weight: 800;
+  line-height: 0.9; /* 👈 igual que Deezer */
+  text-transform: uppercase; /* 👈 igual que Deezer */
+  text-wrap: balance; /* 👈 mantiene balance visual */
+  color: var(--text-color);
+  letter-spacing: -2px;
+  margin: 0;
+}
+
+/* ===================== SUBTÍTULO ===================== */
+.content p {
+  margin-top: 24px;
+  font-size: var(--subtitle-fontsize);
+  font-weight: 700;
+  color: #444;
+  line-height: 1.4;
+}
+
+/* ===================== BOTÓN PRINCIPAL ===================== */
+.btn-main {
+  margin-top: 50px;
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 18px 55px;
+  border-radius: 50px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+  letter-spacing: 0.5px;
+}
+
+.btn-main:hover {
+  background-color: #8a2be2;
+  transform: translateY(-2px);
+}
+
+/* ===================== FONDO MORADO ===================== */
+.background-shape {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(135deg, #fffefe , #8a2be2);
+  z-index: 1;
+  opacity: 0.4; /* 👈 hace el fondo más sutil */
+}
