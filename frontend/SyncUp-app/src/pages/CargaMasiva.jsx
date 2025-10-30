@@ -225,27 +225,42 @@ const CargaMasiva = () => {
                           # Primera línea: Álbum<br/>
                           IGOR;68fef4656178bfb43caf8131;Álbum conceptual;#F8C8DC<br/>
                           <br/>
-                          # Siguientes líneas: Canciones<br/>
-                          EARFQUAKE;R&B;2019;EARFQUAKE.jpg;EARFQUAKE.mp3<br/>
-                          I THINK;Hip-Hop;2019;I THINK.jpg;I THINK.mp3
+                          # Siguientes líneas: Canciones (sin nombres de imagen)<br/>
+                          EARFQUAKE;R&B;2019;EARFQUAKE.mp3<br/>
+                          I THINK;Hip-Hop;2019;I THINK.mp3<br/>
+                          NEW MAGIC WAND;Hip-Hop;2019;NEW MAGIC WAND.mp3
                         </code>
                       </div>
+                      <p style={{ fontSize: '13px', color: '#2196f3', marginTop: '8px', fontWeight: '600' }}>
+                        ℹ️ Formato canciones: Título;Género;Año;ArchivoMP3
+                      </p>
                     </div>
                   </div>
 
                   <div className="instruccion-item">
                     <FaImage size={24} color="#e91e63" />
                     <div>
-                      <h4>2. Imagen de portada del álbum</h4>
+                      <h4>2. Imagen de portada del álbum (archivo independiente)</h4>
                       <p>Imagen JPG/PNG que se usará como portada del álbum</p>
+                      <p style={{ fontSize: '13px', color: '#2196f3', marginTop: '5px', fontWeight: '600' }}>
+                        ℹ️ Esta imagen se aplicará a todas las canciones del álbum
+                      </p>
                     </div>
                   </div>
 
                   <div className="instruccion-item">
                     <FaFileArchive size={24} color="#f39c12" />
                     <div>
-                      <h4>3. Archivo .zip con MP3 e imágenes de canciones</h4>
-                      <p>Debe contener los archivos de cada canción (NO incluir metadata.txt ni portada aquí)</p>
+                      <h4>3. Archivo .zip SOLO con archivos MP3</h4>
+                      <p>Debe contener únicamente los archivos de audio:</p>
+                      <ul>
+                        <li>EARFQUAKE.mp3</li>
+                        <li>I THINK.mp3</li>
+                        <li>NEW MAGIC WAND.mp3</li>
+                      </ul>
+                      <p style={{ fontSize: '13px', color: '#e74c3c', marginTop: '8px', fontWeight: '600' }}>
+                        ⚠️ NO incluir: imágenes, metadata.txt ni portada del álbum
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -296,11 +311,17 @@ const CargaMasiva = () => {
             />
             <label htmlFor="zip-upload" className="upload-label">
               <FaFileArchive size={48} />
-              <p>{archivoZip ? `✓ ${archivoZip.name}` : 'Seleccionar archivo .zip con MP3 e imágenes'}</p>
+              <p>
+                {archivoZip 
+                  ? `✓ ${archivoZip.name}` 
+                  : tipoArchivo === 'canciones' 
+                    ? 'Seleccionar archivo .zip con MP3 e imágenes'
+                    : 'Seleccionar archivo .zip con archivos MP3'}
+              </p>
               <span style={{fontSize: '13px', color: '#666'}}>
                 {tipoArchivo === 'canciones' 
-                  ? 'Debe contener MP3 + imágenes'
-                  : 'Debe contener MP3 + imágenes de canciones'}
+                  ? 'Debe contener MP3 + imágenes de cada canción'
+                  : 'Solo archivos MP3 (sin imágenes)'}
               </span>
             </label>
           </div>

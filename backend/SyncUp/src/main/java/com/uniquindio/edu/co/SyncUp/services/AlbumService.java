@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -123,18 +124,48 @@ public class AlbumService {
     public void eliminarAlbum(String id) {
         Album album = albumRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Álbum no encontrado"));
+        System.out.println("🗑️ Eliminando álbum: " + album.getNombre());
+        // 1️⃣ ELIMINAR TODAS LAS CANCIONES DEL ÁLBUM
+        List<Cancion> cancionesDelAlbum = cancionRepository.findAll().stream()
+                .filter(cancion -> {
+                    // Verificar si la canción pertenece a este álbum
+                    if (cancion.getAlbum() != null && cancion.getAlbum().getId() != null) {
+                        return cancion.getAlbum().getId().equals(id);
+                    }
+                    return false;
+                })
+                .collect(Collectors.toList());
 
-        // 🔥 ELIMINAR LA RELACIÓN DEL ARTISTA TAMBIÉN
+        System.out.println("🎵 Canciones a eliminar: " + cancionesDelAlbum.size());
+        // Eliminar cada canción
+        for (Cancion cancion : cancionesDelAlbum) {
+            System.out.println("   ❌ Eliminando: " + cancion.getTitulo());
+            // Eliminar la canción de la lista del artista
+            if (cancion.getArtista() != null) {
+                Artista artista = artistaRepository.findById(cancion.getArtista().getArtistId()).orElse(null);
+                if (artista != null && artista.getCanciones() != null) {
+                    artista.getCanciones().removeIf(c -> c.getSongId().equals(cancion.getSongId()));
+                    artistaRepository.save(artista);
+                }
+            }
+            // Eliminar la canción de la BD
+            cancionRepository.deleteById(cancion.getSongId());
+        }
+        // 2️⃣ ELIMINAR LA RELACIÓN DEL ARTISTA CON EL ÁLBUM
         artistaRepository.findById(album.getArtistId()).ifPresent(artista -> {
             if (artista.getAlbumes() != null) {
                 artista.getAlbumes().removeIf(a -> a.getId().equals(id));
                 artistaRepository.save(artista);
+                System.out.println("✅ Álbum eliminado de la lista del artista");
             }
         });
 
+        // 3️⃣ ELIMINAR EL ÁLBUM
         albumRepository.deleteById(id);
+        System.out.println("✅ Álbum eliminado exitosamente");
     }
 
+    // Carga masiva
     // Carga masiva
     public Map<String, Object> cargaMasivaAlbumConTresArchivos(
             MultipartFile archivoMetadata,
@@ -145,7 +176,7 @@ public class AlbumService {
         Path tempDir = Files.createTempDirectory("carga-masiva-album");
 
         try {
-            // 1. Extraer el ZIP (solo tiene MP3 e imágenes de canciones)
+            // 1. Extraer el ZIP (solo tiene MP3)
             Map<String, File> archivosExtraidos = extraerZip(archivoZip, tempDir);
 
             System.out.println("═══════════════════════════════════════");
@@ -229,43 +260,66 @@ public class AlbumService {
 
                 String[] datosCan = linea.split(";");
 
-                // Formato: TituloCancion;Genero;Año;NombreImagen;NombreMP3
-                if (datosCan.length >= 5) {
+                // Formato flexible: TituloCancion;Genero;Año;NombreMP3 (4 campos)
+                // O con imagen individual: TituloCancion;Genero;Año;NombreImagen;NombreMP3 (5 campos)
+                if (datosCan.length >= 4) {
                     try {
                         String titulo = datosCan[0].trim();
                         String genero = datosCan[1].trim();
                         int anio = Integer.parseInt(datosCan[2].trim());
-                        String nombreImagen = datosCan[3].trim();
-                        String nombreMP3 = datosCan[4].trim();
 
-                        System.out.println("🎵 Procesando canción: " + titulo);
-                        System.out.println("   Buscando: " + nombreImagen + " y " + nombreMP3);
+                        String imagenUrlCancion;
+                        String nombreMP3;
 
-                        // Verificar archivos
-                        File archivoImagen = archivosExtraidos.get(nombreImagen);
-                        File archivoMP3 = archivosExtraidos.get(nombreMP3);
+                        // Si tiene 5 campos, buscar imagen individual en el ZIP
+                        if (datosCan.length >= 5) {
+                            String nombreImagen = datosCan[3].trim();
+                            nombreMP3 = datosCan[4].trim();
 
-                        if (archivoImagen == null) {
-                            System.err.println("❌ No se encontró imagen: " + nombreImagen);
-                            continue;
+                            System.out.println("🎵 Procesando canción: " + titulo);
+                            System.out.println("   Buscando imagen: " + nombreImagen + " y audio: " + nombreMP3);
+
+                            File archivoImagen = archivosExtraidos.get(nombreImagen);
+                            if (archivoImagen == null) {
+                                System.err.println("❌ No se encontró imagen: " + nombreImagen);
+                                continue;
+                            }
+
+                            // Subir imagen individual a Cloudinary
+                            Map<String, Object> subidaImagen = cloudinary.uploader().upload(
+                                    archivoImagen,
+                                    ObjectUtils.asMap("resource_type", "image")
+                            );
+                            imagenUrlCancion = subidaImagen.get("secure_url").toString();
+                            System.out.println("✓ Imagen individual subida");
+
+                        } else {
+                            // Si tiene 4 campos, usar la portada del álbum para todas las canciones
+                            nombreMP3 = datosCan[3].trim();
+                            imagenUrlCancion = albumGuardado.getImagenUrl(); // Usar portada del álbum
+
+                            System.out.println("🎵 Procesando canción: " + titulo);
+                            System.out.println("   📸 Usando portada del álbum como imagen");
+                            System.out.println("   🎧 Buscando audio: " + nombreMP3);
                         }
+
+                        // Verificar archivo MP3
+                        File archivoMP3 = archivosExtraidos.get(nombreMP3);
                         if (archivoMP3 == null) {
                             System.err.println("❌ No se encontró audio: " + nombreMP3);
+                            System.err.println("   Archivos disponibles: " + archivosExtraidos.keySet());
                             continue;
                         }
 
-                        System.out.println("✓ Archivos encontrados");
+                        System.out.println("✓ Archivo MP3 encontrado");
 
-                        // Subir archivos a Cloudinary
-                        Map<String, Object> subidaImagen = cloudinary.uploader().upload(
-                                archivoImagen,
-                                ObjectUtils.asMap("resource_type", "image")
-                        );
-
+                        // Subir audio a Cloudinary
+                        System.out.println("☁️ Subiendo audio a Cloudinary...");
                         Map<String, Object> subidaAudio = cloudinary.uploader().upload(
                                 archivoMP3,
                                 ObjectUtils.asMap("resource_type", "video")
                         );
+                        System.out.println("✓ Audio subido");
 
                         // Calcular duración
                         Double duracionSeg = (Double) subidaAudio.get("duration");
@@ -277,7 +331,7 @@ public class AlbumService {
                                 .genero(genero)
                                 .anio(anio)
                                 .duracion(duracionMinutos)
-                                .imagenUrl(subidaImagen.get("secure_url").toString())
+                                .imagenUrl(imagenUrlCancion) // Usar la imagen determinada arriba
                                 .musica(subidaAudio.get("secure_url").toString())
                                 .artista(artista)
                                 .album(albumGuardado)
@@ -296,20 +350,25 @@ public class AlbumService {
                         albumRepository.save(albumGuardado);
 
                         contadorCanciones++;
-                        System.out.println("✅ Canción cargada: " + titulo);
+                        System.out.println("✅ Canción cargada exitosamente: " + titulo);
+                        System.out.println("═══════════════════════════════════════");
 
                     } catch (Exception e) {
                         System.err.println("❌ Error al procesar canción: " + linea);
                         e.printStackTrace();
                     }
+                } else {
+                    System.err.println("⚠️ Línea con formato incorrecto (debe tener 4 o 5 campos): " + linea);
                 }
             }
 
             reader.close();
 
-            System.out.println("🎉 Álbum completo cargado exitosamente");
-            System.out.println("   Álbum: " + nombreAlbum);
-            System.out.println("   Canciones: " + contadorCanciones);
+            System.out.println("\n🎉 ÁLBUM COMPLETADO");
+            System.out.println("═══════════════════════════════════════");
+            System.out.println("   📀 Álbum: " + nombreAlbum);
+            System.out.println("   🎵 Canciones cargadas: " + contadorCanciones);
+            System.out.println("═══════════════════════════════════════\n");
 
             Map<String, Object> response = new HashMap<>();
             response.put("albumNombre", nombreAlbum);

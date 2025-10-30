@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './GestionComun.css';
-import { FaPlus, FaEdit, FaTrash, FaSearch, FaImage, FaMusic } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaSearch, FaImage, FaMusic, FaSortUp, FaSortDown, FaSort } from 'react-icons/fa';
 
 const GestionCanciones = () => {
   const [canciones, setCanciones] = useState([]);
@@ -9,8 +9,11 @@ const GestionCanciones = () => {
   const [busqueda, setBusqueda] = useState('');
   const [loading, setLoading] = useState(false);
   const [mostrarModal, setMostrarModal] = useState(false);
-  const [cancionEditando, setCancionEditando] = useState(null);
   const [imagenPreview, setImagenPreview] = useState(null);
+  const [ordenamiento, setOrdenamiento] = useState({
+    campo: null,
+    direccion: 'asc'
+  });
   const [formData, setFormData] = useState({
     titulo: '',
     genero: '',
@@ -57,24 +60,19 @@ const GestionCanciones = () => {
     }
   };
 
-const cargarAlbumes = async () => {
-  try {
-    const response = await fetch('http://localhost:8080/api/albumes');
-    if (response.ok) {
-      const data = await response.json();
-      console.log('📀 ÁLBUMES CARGADOS:', data);
-      console.log('📀 Primer álbum:', data[0]);
-      console.log('📀 ¿Tiene id?', data[0]?.id);
-      console.log('📀 ¿Tiene _id?', data[0]?._id);
-      console.log('📀 ¿Tiene albumId?', data[0]?.albumId);
-      setAlbumes(data);
+  const cargarAlbumes = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/api/albumes');
+      if (response.ok) {
+        const data = await response.json();
+        setAlbumes(data);
+      }
+    } catch (error) {
+      console.error('Error al cargar álbumes:', error);
     }
-  } catch (error) {
-    console.error('Error al cargar álbumes:', error);
-  }
-};
+  };
+
   const handleAgregar = () => {
-    setCancionEditando(null);
     setFormData({ 
       titulo: '', 
       genero: '', 
@@ -88,26 +86,16 @@ const cargarAlbumes = async () => {
     setMostrarModal(true);
   };
 
-  const handleEditar = (cancion) => {
-    setCancionEditando(cancion);
-    setFormData({
-      titulo: cancion.titulo || '',
-      genero: cancion.genero || '',
-      anio: cancion.anio || '',
-      artistaId: cancion.artista?.artistId || '',
-      albumId: cancion.album?.id || '',
-      imagenArchivo: null,
-      musicaArchivo: null
-    });
-    setImagenPreview(cancion.imagenUrl);
-    setMostrarModal(true);
-  };
-
-  const handleEliminar = async (id) => {
-    if (window.confirm('¿Estás seguro de eliminar esta canción?')) {
+  const handleEliminar = async (id, titulo) => {
+    if (window.confirm(`¿Estás seguro de eliminar la canción "${titulo}"?`)) {
       try {
-        await fetch(`http://localhost:8080/api/canciones/${id}`, { method: 'DELETE' });
-        cargarCanciones();
+        const response = await fetch(`http://localhost:8080/api/canciones/${id}`, { 
+          method: 'DELETE' 
+        });
+        if (response.ok) {
+          cargarCanciones();
+          alert('Canción eliminada exitosamente');
+        }
       } catch (error) {
         console.error('Error al eliminar:', error);
         alert('Error al eliminar la canción');
@@ -142,10 +130,6 @@ const cargarAlbumes = async () => {
       return;
     }
 
-    console.log('=== ENVIANDO CANCIÓN ===');
-    console.log('Imagen:', formData.imagenArchivo.name, formData.imagenArchivo.size, 'bytes');
-    console.log('Música:', formData.musicaArchivo.name, formData.musicaArchivo.size, 'bytes');
-
     setLoading(true);
 
     try {
@@ -159,45 +143,84 @@ const cargarAlbumes = async () => {
         albumId: formData.albumId && formData.albumId !== '' ? formData.albumId : null
       };
 
-      console.log('Solicitud:', solicitud);
-
       formDataToSend.append('solicitud', JSON.stringify(solicitud));
       formDataToSend.append('imagen', formData.imagenArchivo);
       formDataToSend.append('musica', formData.musicaArchivo);
-
-      console.log('Enviando petición...');
 
       const response = await fetch('http://localhost:8080/api/canciones', {
         method: 'POST',
         body: formDataToSend
       });
 
-      console.log('Respuesta recibida:', response.status);
-
       if (response.ok) {
-        const data = await response.json();
-        console.log('✓ Canción guardada:', data);
         setMostrarModal(false);
         cargarCanciones();
         alert('Canción agregada exitosamente');
       } else {
         const errorText = await response.text();
-        console.error('✗ Error del servidor:', errorText);
         alert('Error al guardar la canción: ' + errorText);
       }
     } catch (error) {
-      console.error('✗ Error en la petición:', error);
+      console.error('Error en la petición:', error);
       alert('Error de conexión: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleOrdenar = (campo) => {
+    let direccion = 'asc';
+    
+    if (ordenamiento.campo === campo && ordenamiento.direccion === 'asc') {
+      direccion = 'desc';
+    }
+    
+    setOrdenamiento({ campo, direccion });
+  };
+
+  const renderIconoOrdenamiento = (campo) => {
+    if (ordenamiento.campo !== campo) {
+      return <FaSort className="sort-icon" />;
+    }
+    return ordenamiento.direccion === 'asc' 
+      ? <FaSortUp className="sort-icon active" /> 
+      : <FaSortDown className="sort-icon active" />;
+  };
+
   const cancionesFiltradas = canciones.filter(c => 
     c.titulo?.toLowerCase().includes(busqueda.toLowerCase()) ||
-    c.artista?.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+    c.artistaNombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+    c.albumNombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
     c.genero?.toLowerCase().includes(busqueda.toLowerCase())
   );
+
+  const obtenerCancionesOrdenadas = () => {
+    let cancionesOrdenadas = [...cancionesFiltradas];
+
+    if (ordenamiento.campo) {
+      cancionesOrdenadas.sort((a, b) => {
+        let valorA = a[ordenamiento.campo];
+        let valorB = b[ordenamiento.campo];
+
+        if (typeof valorA === 'string') {
+          valorA = valorA.toLowerCase();
+          valorB = valorB?.toLowerCase() || '';
+        }
+
+        if (valorA < valorB) {
+          return ordenamiento.direccion === 'asc' ? -1 : 1;
+        }
+        if (valorA > valorB) {
+          return ordenamiento.direccion === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return cancionesOrdenadas;
+  };
+
+  const cancionesParaMostrar = obtenerCancionesOrdenadas();
 
   const formatDuracion = (duracion) => {
     if (!duracion) return 'N/A';
@@ -219,7 +242,7 @@ const cargarAlbumes = async () => {
         <FaSearch />
         <input
           type="text"
-          placeholder="Buscar por título, artista o género..."
+          placeholder="Buscar por título, artista, álbum o género..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
@@ -232,34 +255,88 @@ const cargarAlbumes = async () => {
           <thead>
             <tr>
               <th>Imagen</th>
-              <th>Título</th>
-              <th>Artista</th>
-              <th>Álbum</th>
-              <th>Género</th>
-              <th>Duración</th>
-              <th>Año</th>
+              <th onClick={() => handleOrdenar('titulo')} className="sortable">
+                <div className="th-content">
+                  Título
+                  <span className="sort-icon-container">{renderIconoOrdenamiento('titulo')}</span>
+                </div>
+              </th>
+              <th onClick={() => handleOrdenar('artistaNombre')} className="sortable">
+                <div className="th-content">
+                  Artista
+                  <span className="sort-icon-container">{renderIconoOrdenamiento('artistaNombre')}</span>
+                </div>
+              </th>
+              <th onClick={() => handleOrdenar('albumNombre')} className="sortable">
+                <div className="th-content">
+                  Álbum
+                  <span className="sort-icon-container">{renderIconoOrdenamiento('albumNombre')}</span>
+                </div>
+              </th>
+              <th onClick={() => handleOrdenar('genero')} className="sortable">
+                <div className="th-content">
+                  Género
+                  <span className="sort-icon-container">{renderIconoOrdenamiento('genero')}</span>
+                </div>
+              </th>
+              <th onClick={() => handleOrdenar('duracion')} className="sortable">
+                <div className="th-content">
+                  Duración
+                  <span className="sort-icon-container">{renderIconoOrdenamiento('duracion')}</span>
+                </div>
+              </th>
+              <th onClick={() => handleOrdenar('anio')} className="sortable">
+                <div className="th-content">
+                  Año
+                  <span className="sort-icon-container">{renderIconoOrdenamiento('anio')}</span>
+                </div>
+              </th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {cancionesFiltradas.map((cancion) => (
+            {cancionesParaMostrar.map((cancion) => (
               <tr key={cancion.songId}>
                 <td>
                   {cancion.imagenUrl ? (
-                    <img src={cancion.imagenUrl} alt={cancion.titulo} style={{width: '50px', height: '50px', objectFit: 'cover', borderRadius: '5px'}} />
+                    <img 
+                      src={cancion.imagenUrl} 
+                      alt={cancion.titulo} 
+                      style={{
+                        width: '50px', 
+                        height: '50px', 
+                        objectFit: 'cover', 
+                        borderRadius: '8px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      }} 
+                    />
                   ) : (
-                    <div style={{width: '50px', height: '50px', background: '#f0f0f0', borderRadius: '5px'}}></div>
+                    <div style={{
+                      width: '50px', 
+                      height: '50px', 
+                      background: '#f0f0f0', 
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <FaMusic color="#ccc" />
+                    </div>
                   )}
                 </td>
                 <td><strong>{cancion.titulo}</strong></td>
                 <td>{cancion.artistaNombre || 'Sin artista'}</td>
-                <td>{cancion.albumNombre || 'Sin álbum'}</td> 
+                <td>{cancion.albumNombre || '-'}</td>
                 <td><span className="badge">{cancion.genero}</span></td>
                 <td>{formatDuracion(cancion.duracion)}</td>
                 <td>{cancion.anio}</td>
                 <td>
                   <div className="action-buttons">
-                    <button className="btn-delete" onClick={() => handleEliminar(cancion.songId)}>
+                    <button 
+                      className="btn-delete" 
+                      onClick={() => handleEliminar(cancion.songId, cancion.titulo)}
+                      title="Eliminar canción"
+                    >
                       <FaTrash />
                     </button>
                   </div>
@@ -269,7 +346,7 @@ const cargarAlbumes = async () => {
           </tbody>
         </table>
 
-        {cancionesFiltradas.length === 0 && !loading && (
+        {cancionesParaMostrar.length === 0 && !loading && (
           <div className="empty-state">No se encontraron canciones</div>
         )}
       </div>
@@ -308,17 +385,17 @@ const cargarAlbumes = async () => {
 
               <div className="form-group">
                 <label>Álbum (opcional)</label>
-                  <select
-                    value={formData.albumId}
-                    onChange={(e) => setFormData({...formData, albumId: e.target.value})}
-            >
-                <option value="">Sin álbum</option>
-                    {albumes.map(album => (
-                      <option key={album._id} value={album._id}>  {/* ← album.id */}
-                    {album.nombre}
+                <select
+                  value={formData.albumId}
+                  onChange={(e) => setFormData({...formData, albumId: e.target.value})}
+                >
+                  <option value="">Sin álbum</option>
+                  {albumes.map(album => (
+                    <option key={album._id} value={album._id}>
+                      {album.nombre}
                     </option>
-          ))}
-                  </select>
+                  ))}
+                </select>
               </div>
 
               <div className="form-group">
@@ -387,6 +464,44 @@ const cargarAlbumes = async () => {
       )}
 
       <style jsx>{`
+        .sortable {
+          cursor: pointer;
+          user-select: none;
+          transition: background-color 0.2s;
+        }
+
+        .sortable:hover {
+          background-color: rgba(138, 43, 226, 0.1);
+        }
+
+        .th-content {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+        }
+
+        .sort-icon-container {
+          display: flex;
+          align-items: center;
+          min-width: 16px;
+        }
+
+        .sort-icon {
+          font-size: 14px;
+          opacity: 0.3;
+          transition: opacity 0.2s;
+        }
+
+        .sortable:hover .sort-icon {
+          opacity: 0.6;
+        }
+
+        .sort-icon.active {
+          opacity: 1;
+          color: #8a2be2;
+        }
+
         .modal-cancion {
           max-width: 600px;
         }
@@ -404,6 +519,10 @@ const cargarAlbumes = async () => {
           width: 100%;
           height: 100%;
           object-fit: cover;
+        }
+
+        .data-table th {
+          white-space: nowrap;
         }
       `}</style>
     </div>

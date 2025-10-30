@@ -34,11 +34,9 @@ public class UsuarioService {
     public Usuario actualizarPerfil(String username, String nombre, String correo, String password) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
         if (nombre != null) usuario.setNombre(nombre);
         if (correo != null) usuario.setCorreo(correo);
         if (password != null) usuario.setPassword(password);
-
         return usuarioRepository.save(usuario);
     }
 
@@ -63,25 +61,20 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
-    // 🔹 Versión original del método seguirUsuario (sin DBRef)
     public Usuario seguirUsuario(String username, Usuario aSeguir) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
         usuario.getSiguiendo().add(aSeguir);
         aSeguir.getSeguidores().add(usuario);
-
-        usuarioRepository.save(aSeguir); // actualizar usuario seguido
+        usuarioRepository.save(aSeguir); // actualizar usuario que se sigue
         return usuarioRepository.save(usuario);
     }
 
     public Usuario dejarDeSeguirUsuario(String username, Usuario aDejar) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
         usuario.getSiguiendo().remove(aDejar);
         aDejar.getSeguidores().remove(usuario);
-
         usuarioRepository.save(aDejar);
         return usuarioRepository.save(usuario);
     }

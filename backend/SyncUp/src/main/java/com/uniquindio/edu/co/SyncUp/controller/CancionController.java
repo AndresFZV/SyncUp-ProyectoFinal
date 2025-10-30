@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +27,6 @@ public class CancionController {
     public ResponseEntity<List<CancionDTO>> listarCanciones() {
         return ResponseEntity.ok(cancionService.listarCanciones());
     }
-
 
     // Obtener canción por ID
     @GetMapping("/{id}")
@@ -51,16 +49,12 @@ public class CancionController {
             System.out.println("Solicitud: " + solicitud);
             System.out.println("Imagen: " + imagen.getOriginalFilename() + " - " + imagen.getSize() + " bytes");
             System.out.println("Música: " + musica.getOriginalFilename() + " - " + musica.getSize() + " bytes");
-
             ObjectMapper mapper = new ObjectMapper();
             SolicitudCancion solicitudCancion = mapper.readValue(solicitud, SolicitudCancion.class);
             solicitudCancion.setArchivoImagen(imagen);
             solicitudCancion.setMusica(musica);
-
             Cancion cancionGuardada = cancionService.addCancion(solicitudCancion);
-
             System.out.println("✓ Canción guardada exitosamente: " + cancionGuardada.getTitulo());
-
             return ResponseEntity.status(HttpStatus.CREATED).body(cancionGuardada);
         } catch (Exception e) {
             System.err.println("✗ ERROR al guardar canción: " + e.getMessage());
@@ -95,7 +89,6 @@ public class CancionController {
     }
 
     // Carga masiva
-    // Carga masiva con ZIP
     @PostMapping("/carga-masiva")
     public ResponseEntity<?> cargaMasiva(
             @RequestParam("archivoMetadata") MultipartFile archivoMetadata,

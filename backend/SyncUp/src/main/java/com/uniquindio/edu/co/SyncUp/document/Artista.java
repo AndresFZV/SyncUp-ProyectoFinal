@@ -1,6 +1,6 @@
 package com.uniquindio.edu.co.SyncUp.document;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -28,11 +28,13 @@ public class Artista {
     // Álbumes asociados al artista
     @DBRef
     @Builder.Default
+    @JsonIgnoreProperties({"artista", "canciones"}) // ← AGREGAR ESTO
     private List<Album> albumes = new LinkedList<>();
 
     // Canciones sueltas (que podrían no pertenecer a un álbum)
     @DBRef
     @Builder.Default
+    @JsonIgnoreProperties({"artista", "album"}) // ← AGREGAR ESTO
     private List<Cancion> canciones = new LinkedList<>();
 
     @Override
@@ -48,4 +50,3 @@ public class Artista {
         return Objects.equals(artistId, artista.artistId);
     }
 }
-

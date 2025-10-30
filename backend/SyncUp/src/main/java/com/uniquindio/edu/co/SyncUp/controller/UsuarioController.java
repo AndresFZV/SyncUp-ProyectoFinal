@@ -107,7 +107,6 @@ public class UsuarioController {
     public ResponseEntity<List<Map<String, Object>>> listarUsuarios() {
         try {
             List<Usuario> usuarios = usuarioService.listarUsuarios();
-
             List<Map<String, Object>> usuariosSimples = usuarios.stream()
                     .map(usuario -> {
                         Map<String, Object> data = new HashMap<>();
@@ -115,7 +114,6 @@ public class UsuarioController {
                         data.put("nombre", usuario.getNombre());
                         data.put("correo", usuario.getCorreo());
                         data.put("edad", usuario.getEdad());
-
                         // Contar seguidores de forma segura
                         int cantidadSeguidores = 0;
                         List<String> seguidoresNombres = new ArrayList<>();
@@ -129,7 +127,6 @@ public class UsuarioController {
                         }
                         data.put("cantidadSeguidores", cantidadSeguidores);
                         data.put("seguidoresNombres", seguidoresNombres);
-
                         // Contar siguiendo de forma segura
                         int cantidadSiguiendo = 0;
                         List<String> siguiendoNombres = new ArrayList<>();
@@ -143,11 +140,9 @@ public class UsuarioController {
                         }
                         data.put("cantidadSiguiendo", cantidadSiguiendo);
                         data.put("siguiendoNombres", siguiendoNombres);
-
                         return data;
                     })
                     .collect(Collectors.toList());
-
             return ResponseEntity.ok(usuariosSimples);
         } catch (Exception e) {
             e.printStackTrace();
@@ -200,16 +195,13 @@ public class UsuarioController {
     public ResponseEntity<List<Map<String, Object>>> getUsuariosMasSeguidos() {
         try {
             List<Usuario> usuarios = usuarioService.listarUsuarios();
-
             List<Map<String, Object>> usuariosMasSeguidos = usuarios.stream()
                     .map(usuario -> {
                         Map<String, Object> data = new HashMap<>();
                         data.put("username", usuario.getUsername());
                         data.put("nombre", usuario.getNombre());
-
                         int cantidadSeguidores = 0;
                         List<String> nombresSeguidores = new ArrayList<>();
-
                         if (usuario.getSeguidores() != null) {
                             cantidadSeguidores = usuario.getSeguidores().size();
                             nombresSeguidores = usuario.getSeguidores().stream()
@@ -218,16 +210,14 @@ public class UsuarioController {
                                     .filter(Objects::nonNull)
                                     .collect(Collectors.toList());
                         }
-
                         data.put("seguidores", cantidadSeguidores);
                         data.put("listaSeguidores", nombresSeguidores);
-
                         return data;
                     })
-                    .sorted((a, b) -> Integer.compare((Integer) b.get("seguidores"), (Integer) a.get("seguidores")))
+                    .sorted((a, b) -> Integer.compare((Integer)
+                            b.get("seguidores"), (Integer) a.get("seguidores")))
                     .limit(10)
                     .collect(Collectors.toList());
-
             return ResponseEntity.ok(usuariosMasSeguidos);
         } catch (Exception e) {
             e.printStackTrace();
