@@ -18,7 +18,8 @@ import {
 import { FaMusic, FaUsers, FaCompactDisc, FaChartLine } from 'react-icons/fa';
 import { getAllCanciones } from '../../../services/cancionesService';
 import { getAllArtistas } from '../../../services/artistasService';
-import { getUsuariosMasSeguidos } from '../../../services/usuariosService';
+import { getUsuariosMasSeguidos } from "../../../services/usuariosService";
+
 
 // Configuración de colores para gráficos
 const CHART_COLORS = [
