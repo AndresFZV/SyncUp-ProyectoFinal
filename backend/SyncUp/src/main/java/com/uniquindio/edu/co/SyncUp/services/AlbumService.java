@@ -3,11 +3,11 @@ package com.uniquindio.edu.co.SyncUp.services;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.uniquindio.edu.co.SyncUp.document.Album;
-import com.uniquindio.edu.co.SyncUp.document.Artista; // ← AGREGAR
+import com.uniquindio.edu.co.SyncUp.document.Artista;
 import com.uniquindio.edu.co.SyncUp.document.Cancion;
 import com.uniquindio.edu.co.SyncUp.dto.SolicitudAlbum;
 import com.uniquindio.edu.co.SyncUp.repository.AlbumRepository;
-import com.uniquindio.edu.co.SyncUp.repository.ArtistaRepository; // ← AGREGAR
+import com.uniquindio.edu.co.SyncUp.repository.ArtistaRepository;
 import com.uniquindio.edu.co.SyncUp.repository.CancionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

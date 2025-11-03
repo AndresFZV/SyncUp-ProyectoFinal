@@ -1,0 +1,121 @@
+/* Importar estilos comunes */
+@import '../GestionComun.css';
+
+/* Estilos específicos de Gestión Canciones */
+
+.cancion-thumbnail {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cancion-thumbnail-placeholder {
+  width: 50px;
+  height: 50px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.sortable:hover {
+  background-color: rgba(138, 43, 226, 0.1);
+}
+
+.th-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sort-icon-container {
+  display: flex;
+  align-items: center;
+  min-width: 16px;
+}
+
+.sort-icon {
+  font-size: 14px;
+  opacity: 0.3;
+  transition: opacity 0.2s;
+}
+
+.sortable:hover .sort-icon {
+  opacity: 0.6;
+}
+
+.sort-icon.active {
+  opacity: 1;
+  color: #8a2be2;
+}
+
+.modal-cancion {
+  max-width: 600px;
+}
+
+.image-preview {
+  margin-top: 15px;
+  width: 150px;
+  height: 150px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid #e0e0e0;
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.file-selected {
+  margin-top: 10px;
+  color: #666;
+  font-size: 14px;
+}
+
+.data-table th {
+  white-space: nowrap;
+}
+
+/* Ajustes para encabezado morado */
+.data-table thead th {
+  color: white;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.sortable:hover {
+  background-color: rgba(255, 255, 255, 0.1);  /* ← Hover más claro para fondo morado */
+}
+
+.sort-icon {
+  font-size: 14px;
+  opacity: 0.7;  /* ← Más visible en fondo morado */
+  transition: opacity 0.2s;
+  color: white;
+}
+
+.sortable:hover .sort-icon {
+  opacity: 1;
+}
+
+.sort-icon.active {
+  opacity: 1;
+  color: white;  /* ← Blanco cuando está activo */
+}
