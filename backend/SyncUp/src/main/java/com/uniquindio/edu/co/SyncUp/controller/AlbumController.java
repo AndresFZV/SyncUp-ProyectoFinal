@@ -2,6 +2,7 @@ package com.uniquindio.edu.co.SyncUp.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uniquindio.edu.co.SyncUp.document.Album;
+import com.uniquindio.edu.co.SyncUp.dto.AlbumDTO;  // ← AGREGAR
 import com.uniquindio.edu.co.SyncUp.dto.SolicitudAlbum;
 import com.uniquindio.edu.co.SyncUp.services.AlbumService;
 import lombok.RequiredArgsConstructor;
@@ -21,17 +22,17 @@ import java.util.Map;
 public class AlbumController {
     private final AlbumService albumService;
 
-    // GET - Listar todos los álbumes
+    // ← CAMBIAR: GET - Listar todos los álbumes
     @GetMapping
-    public ResponseEntity<List<Album>> listarAlbumes() {
-        return ResponseEntity.ok(albumService.listarAlbumes());
+    public ResponseEntity<List<AlbumDTO>> listarAlbumes() {
+        return ResponseEntity.ok(albumService.listarAlbumesDTO());
     }
 
-    // GET - Obtener álbum por ID
+    // ← CAMBIAR: GET - Obtener álbum por ID
     @GetMapping("/{id}")
     public ResponseEntity<?> obtenerAlbum(@PathVariable String id) {
         try {
-            return ResponseEntity.ok(albumService.obtenerAlbum(id));
+            return ResponseEntity.ok(albumService.obtenerAlbumDTO(id));
         } catch (RuntimeException e) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", true);
@@ -40,7 +41,7 @@ public class AlbumController {
         }
     }
 
-    // POST - Crear álbum
+    // POST - Crear álbum (sin cambios)
     @PostMapping
     public ResponseEntity<?> addAlbum(@RequestPart("solicitud") String solicitud,
                                       @RequestPart("archivo") MultipartFile archivo) {
@@ -57,7 +58,7 @@ public class AlbumController {
         }
     }
 
-    // PUT - Actualizar álbum
+    // PUT - Actualizar álbum (sin cambios)
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizarAlbum(
             @PathVariable String id,
@@ -76,7 +77,7 @@ public class AlbumController {
         }
     }
 
-    // DELETE - Eliminar álbum
+    // DELETE - Eliminar álbum (sin cambios)
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminarAlbum(@PathVariable String id) {
         try {
@@ -90,7 +91,7 @@ public class AlbumController {
         }
     }
 
-    // Agregar este método al AlbumController
+    // POST - Carga masiva (sin cambios)
     @PostMapping("/carga-masiva")
     public ResponseEntity<?> cargaMasivaAlbum(
             @RequestParam("archivoMetadata") MultipartFile archivoMetadata,
@@ -98,9 +99,9 @@ public class AlbumController {
             @RequestParam("archivoMultimedia") MultipartFile archivoMultimedia) {
         try {
             Map<String, Object> resultado = albumService.cargaMasivaAlbumConTresArchivos(
-                    archivoMetadata,      // metadata.txt
-                    imagenPortada,        // portada del álbum
-                    archivoMultimedia     // ZIP con MP3 e imágenes
+                    archivoMetadata,
+                    imagenPortada,
+                    archivoMultimedia
             );
             return ResponseEntity.ok(resultado);
         } catch (Exception e) {

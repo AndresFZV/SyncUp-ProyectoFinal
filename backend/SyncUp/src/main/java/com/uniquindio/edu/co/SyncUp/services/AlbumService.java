@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import com.uniquindio.edu.co.SyncUp.dto.AlbumDTO;
 
 @Service
 @RequiredArgsConstructor
@@ -423,5 +424,48 @@ public class AlbumService {
             }
             directorio.delete();
         }
+    }
+
+    // ← NUEVO: Listar álbumes como DTO
+    public List<AlbumDTO> listarAlbumesDTO() {
+        List<Album> albumes = albumRepository.findAll();
+        return albumes.stream()
+                .map(this::convertirAlbumADTO)
+                .collect(Collectors.toList());
+    }
+
+    // ← NUEVO: Obtener álbum como DTO
+    public AlbumDTO obtenerAlbumDTO(String id) {
+        Album album = albumRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Álbum no encontrado"));
+        return convertirAlbumADTO(album);
+    }
+
+    // ← NUEVO: Convertir Album a AlbumDTO
+    private AlbumDTO convertirAlbumADTO(Album album) {
+        String artistaNombre = "Sin artista";
+
+        // Buscar el artista por ID
+        if (album.getArtistId() != null && !album.getArtistId().isEmpty()) {
+            try {
+                Artista artista = artistaRepository.findById(album.getArtistId()).orElse(null);
+                if (artista != null) {
+                    artistaNombre = artista.getNombre();
+                }
+            } catch (Exception e) {
+                System.err.println("Error al buscar artista: " + e.getMessage());
+            }
+        }
+
+        return AlbumDTO.builder()
+                .id(album.getId())
+                .nombre(album.getNombre())
+                .descripcion(album.getDescripcion())
+                .bgColor(album.getBgColor())
+                .imagenUrl(album.getImagenUrl())
+                .artistaId(album.getArtistId())
+                .artistaNombre(artistaNombre)
+                .totalCanciones(album.getSongIds() != null ? album.getSongIds().size() : 0)
+                .build();
     }
 }
