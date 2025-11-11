@@ -3,10 +3,12 @@ package com.uniquindio.edu.co.SyncUp.services;
 import com.uniquindio.edu.co.SyncUp.document.Artista;
 import com.uniquindio.edu.co.SyncUp.document.Cancion;
 import com.uniquindio.edu.co.SyncUp.document.Usuario;
+import com.uniquindio.edu.co.SyncUp.repository.CancionRepository;
 import com.uniquindio.edu.co.SyncUp.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +17,7 @@ import java.util.Optional;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final CancionRepository cancionRepository;
 
     public Usuario registrarUsuario(Usuario usuario) {
         if (usuarioRepository.existsById(usuario.getUsername())) {
@@ -47,10 +50,29 @@ public class UsuarioService {
         usuarioRepository.deleteById(username);
     }
 
-    public Usuario agregarCancionFavorita(String username, Cancion cancion) {
+    public Usuario agregarCancionFavorita(String username, String cancionId) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        usuario.getListaFavoritos().add(cancion);
+
+        // Buscar la canción existente en la base de datos
+        Cancion cancionExistente = cancionRepository.findById(cancionId)
+                .orElseThrow(() -> new RuntimeException("Canción no encontrada"));
+
+        // Inicializar la lista si es null
+        if (usuario.getListaFavoritos() == null) {
+            usuario.setListaFavoritos(new LinkedList<>());
+        }
+
+        // Verificar que no esté duplicada
+        boolean yaExiste = usuario.getListaFavoritos().stream()
+                .anyMatch(c -> c.getSongId().equals(cancionId));
+
+        if (yaExiste) {
+            throw new RuntimeException("La canción ya está en favoritos");
+        }
+
+        // Agregar la canción existente (con todas sus referencias intactas)
+        usuario.getListaFavoritos().add(cancionExistente);
         return usuarioRepository.save(usuario);
     }
 
@@ -102,5 +124,34 @@ public class UsuarioService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         usuario.setPassword(nuevaPassword);
         return usuarioRepository.save(usuario);
+    }
+    /**
+     * Eliminar canción de favoritos
+     */
+    public void eliminarCancionFavorita(String username, String cancionId) {
+        Usuario usuario = buscarIdentificador(username);
+        if (usuario.getListaFavoritos() != null) {
+            usuario.getListaFavoritos().removeIf(c ->
+                    c.getSongId().equals(cancionId)
+            );
+            usuarioRepository.save(usuario);
+        } else {
+            throw new RuntimeException("El usuario no tiene canciones favoritas");
+        }
+    }
+
+    /**
+     * Eliminar artista de favoritos
+     */
+    public void eliminarArtistaFavorito(String username, String artistaId) {
+        Usuario usuario = buscarIdentificador(username);
+        if (usuario.getArtistasFavoritos() != null) {
+            usuario.getArtistasFavoritos().removeIf(a ->
+                    a.getArtistId().equals(artistaId)
+            );
+            usuarioRepository.save(usuario);
+        } else {
+            throw new RuntimeException("El usuario no tiene artistas favoritos");
+        }
     }
 }

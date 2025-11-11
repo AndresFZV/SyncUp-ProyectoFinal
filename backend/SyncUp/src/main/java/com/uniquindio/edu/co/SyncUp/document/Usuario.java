@@ -32,6 +32,11 @@ public class Usuario {
     @Builder.Default
     private LinkedList<Artista> artistasFavoritos = new LinkedList<>();
 
+    // ← AGREGAR ESTE CAMPO
+    @DBRef
+    @Builder.Default
+    private LinkedList<Album> albumesFavoritos = new LinkedList<>();
+
     // Usuarios que sigue
     @DBRef
     @Builder.Default

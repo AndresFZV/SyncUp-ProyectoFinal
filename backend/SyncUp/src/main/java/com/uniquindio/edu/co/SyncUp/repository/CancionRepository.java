@@ -2,17 +2,23 @@ package com.uniquindio.edu.co.SyncUp.repository;
 
 import com.uniquindio.edu.co.SyncUp.document.Cancion;
 import org.springframework.data.mongodb.repository.MongoRepository;
-
+import org.springframework.data.mongodb.repository.Query;
 import java.util.List;
 
 public interface CancionRepository extends MongoRepository<Cancion, String> {
-    // 🔍 Buscar canciones por el ID del artista
- //   List<Cancion> findByArtista_Id(String artistaId);
 
-    // 🔍 Buscar canciones por el ID del álbum
-   // List<Cancion> findByAlbum_Id(String albumId);
+    /**
+     * Busca canciones por ID de álbum
+     * Como Album es @DBRef, usa la sintaxis especial 'album.$id'
+     * Pero como Album.id se llama "id", usamos esa propiedad
+     */
+    @Query("{ 'album.$id': { $oid: ?0 } }")
+    List<Cancion> findByAlbumId(String albumId);
 
-    // 🔍 Buscar canciones por género (opcional, útil para el frontend)
-    //List<Cancion> findByGeneroIgnoreCase(String genero);
-
+    /**
+     * Busca canciones por ID de artista
+     * Como Artista es @DBRef y tiene "artistId", usamos esa propiedad
+     */
+    @Query("{ 'artista.$id': { $oid: ?0 } }")
+    List<Cancion> findByArtistaId(String artistaId);
 }

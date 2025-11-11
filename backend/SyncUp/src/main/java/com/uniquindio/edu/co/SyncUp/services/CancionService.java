@@ -350,4 +350,48 @@ public class CancionService {
             directorio.delete();
         }
     }
+
+// ... otros métodos del servicio
+
+    // Obtener canciones por álbum
+    public List<CancionDTO> obtenerCancionesPorAlbum(String albumId) {
+        List<Cancion> canciones = cancionRepository.findByAlbumId(albumId);
+        return canciones.stream()
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
+    }
+
+    // Obtener canciones por artista
+    public List<CancionDTO> obtenerCancionesPorArtista(String artistaId) {
+        List<Cancion> canciones = cancionRepository.findByArtistaId(artistaId);
+        return canciones.stream()
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
+    }
+
+    private CancionDTO convertirADTO(Cancion cancion) {
+        CancionDTO.CancionDTOBuilder builder = CancionDTO.builder()
+                .songId(cancion.getSongId())
+                .titulo(cancion.getTitulo())
+                .genero(cancion.getGenero())
+                .anio(cancion.getAnio())
+                .duracion(cancion.getDuracion())
+                .imagenUrl(cancion.getImagenUrl())
+                .musica(cancion.getMusica()); // ← Tu campo se llama "musica"
+
+        // Información del artista desde @DBRef
+        if (cancion.getArtista() != null) {
+            builder.artistaId(cancion.getArtista().getArtistId());
+            builder.artistaNombre(cancion.getArtista().getNombre());
+        }
+
+        // Información del álbum desde @DBRef
+        if (cancion.getAlbum() != null) {
+            builder.albumId(cancion.getAlbum().getId());
+            builder.albumNombre(cancion.getAlbum().getNombre());
+        }
+
+        return builder.build();
+    }
+
 }

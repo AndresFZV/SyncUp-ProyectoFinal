@@ -15,6 +15,8 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Getter
+@Setter
 public class Artista {
 
     @Id
@@ -26,13 +28,13 @@ public class Artista {
     private String imagenUrl;
 
     // Álbumes asociados al artista
-    @DBRef
+    @DBRef(lazy = true)
     @Builder.Default
     @JsonIgnoreProperties({"artista", "canciones"}) // ← AGREGAR ESTO
     private List<Album> albumes = new LinkedList<>();
 
     // Canciones sueltas (que podrían no pertenecer a un álbum)
-    @DBRef
+    @DBRef(lazy = true)
     @Builder.Default
     @JsonIgnoreProperties({"artista", "album"}) // ← AGREGAR ESTO
     private List<Cancion> canciones = new LinkedList<>();

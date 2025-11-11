@@ -38,6 +38,22 @@ public class CancionController {
         }
     }
 
+    // ← NUEVO: Obtener canciones por álbum
+    @GetMapping("/album/{albumId}")
+    public ResponseEntity<?> obtenerCancionesPorAlbum(@PathVariable String albumId) {
+        try {
+            List<CancionDTO> canciones = cancionService.obtenerCancionesPorAlbum(albumId);
+            return ResponseEntity.ok(canciones);
+        } catch (RuntimeException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", true);
+            errorResponse.put("mensaje", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
+    }
+
+
+
     // Agregar canción con archivos
     @PostMapping
     public ResponseEntity<?> agregarCancion(
