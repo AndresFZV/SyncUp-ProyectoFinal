@@ -1,7 +1,6 @@
 package com.uniquindio.edu.co.SyncUp.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.uniquindio.edu.co.SyncUp.document.Artista;
 import com.uniquindio.edu.co.SyncUp.dto.ArtistaDTO;
 import com.uniquindio.edu.co.SyncUp.dto.SolicitudArtista;
 import com.uniquindio.edu.co.SyncUp.services.ArtistaService;
@@ -22,18 +21,17 @@ import java.util.Map;
 public class ArtistaController {
     private final ArtistaService artistaService;
 
-    // GET - Listar todos los artistas
     @GetMapping
     public ResponseEntity<List<ArtistaDTO>> listarArtistas() {
         return ResponseEntity.ok(artistaService.listarArtistasDTO());
     }
 
-    // Los demás métodos (POST, PUT, DELETE) quedan igual
-    // GET - Obtener artista por ID
+    // ← CAMBIO: Usar obtenerArtistaDetalle en lugar de obtenerArtista
     @GetMapping("/{id}")
     public ResponseEntity<?> obtenerArtista(@PathVariable String id) {
         try {
-            return ResponseEntity.ok(artistaService.obtenerArtista(id));
+            ArtistaDTO artista = artistaService.obtenerArtistaDetalle(id);
+            return ResponseEntity.ok(artista);
         } catch (RuntimeException e) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", true);
@@ -42,7 +40,6 @@ public class ArtistaController {
         }
     }
 
-    // POST - Crear artista
     @PostMapping
     public ResponseEntity<?> addArtista(@RequestPart("solicitud") String solicitud,
                                         @RequestPart("archivo") MultipartFile archivo) {
@@ -59,7 +56,6 @@ public class ArtistaController {
         }
     }
 
-    // PUT - Actualizar artista
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizarArtista(@PathVariable String id,
                                                @RequestPart("solicitud") String solicitud,
@@ -79,7 +75,6 @@ public class ArtistaController {
         }
     }
 
-    // DELETE - Eliminar artista
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminarArtista(@PathVariable String id) {
         try {
@@ -92,6 +87,4 @@ public class ArtistaController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
-
-
 }

@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -18,4 +20,9 @@ public class ArtistaDTO {
     private String imagenUrl;
     private int totalCanciones;
     private int totalAlbumes;
+
+    // ← AGREGAR ESTOS CAMPOS OPCIONALES
+    private Integer oyentesMensuales;
+    private List<AlbumDTO> albumes;
+    private List<CancionDTO> canciones;
 }
