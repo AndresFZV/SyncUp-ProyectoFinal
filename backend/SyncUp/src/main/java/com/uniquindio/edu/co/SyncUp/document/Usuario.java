@@ -1,5 +1,6 @@
 package com.uniquindio.edu.co.SyncUp.document;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -12,6 +13,7 @@ import java.util.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@JsonIgnoreProperties({"siguiendo", "seguidores", "listaFavoritos", "artistasFavoritos", "albumesFavoritos"})
 public class Usuario {
 
     @Id
