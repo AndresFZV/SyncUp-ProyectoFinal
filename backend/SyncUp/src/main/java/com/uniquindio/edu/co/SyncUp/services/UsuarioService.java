@@ -22,6 +22,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Servicio para la gestión de usuarios en el sistema SyncUp.
+ * Proporciona funcionalidades para registro, autenticación, gestión de perfil,
+ * favoritos y generación de reportes.
+ *
+ * @author SyncUp Team
+ * @version 1.0
+ */
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
@@ -30,7 +38,14 @@ public class UsuarioService {
     private final CancionRepository cancionRepository;
     private final AlbumRepository albumRepository;
     private final ArtistaRepository artistaRepository;
-    
+
+    /**
+     * Registra un nuevo usuario en el sistema.
+     *
+     * @param usuario El usuario a registrar
+     * @return El usuario registrado
+     * @throws RuntimeException Si el username o correo ya existen
+     */
     public Usuario registrarUsuario(Usuario usuario) {
         if (usuarioRepository.existsById(usuario.getUsername())) {
             throw new RuntimeException("El username ya existe");
@@ -41,11 +56,29 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
+    /**
+     * Autentica a un usuario en el sistema.
+     *
+     * @param username El nombre de usuario
+     * @param password La contraseña del usuario
+     * @return El usuario autenticado
+     * @throws RuntimeException Si las credenciales son incorrectas
+     */
     public Usuario login(String username, String password) {
         return usuarioRepository.findByUsernameAndPassword(username, password)
                 .orElseThrow(() -> new RuntimeException("Credenciales incorrectas"));
     }
 
+    /**
+     * Actualiza el perfil de un usuario.
+     *
+     * @param username El nombre de usuario
+     * @param nombre El nuevo nombre (opcional)
+     * @param correo El nuevo correo (opcional)
+     * @param password La nueva contraseña (opcional)
+     * @return El usuario actualizado
+     * @throws RuntimeException Si el usuario no existe
+     */
     public Usuario actualizarPerfil(String username, String nombre, String correo, String password) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -55,6 +88,12 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
+    /**
+     * Elimina un usuario del sistema.
+     *
+     * @param username El nombre de usuario a eliminar
+     * @throws RuntimeException Si el usuario no existe
+     */
     public void eliminarUsuario(String username) {
         if (!usuarioRepository.existsById(username)) {
             throw new RuntimeException("Usuario no encontrado");
@@ -62,20 +101,25 @@ public class UsuarioService {
         usuarioRepository.deleteById(username);
     }
 
+    /**
+     * Agrega una canción a la lista de favoritos del usuario.
+     *
+     * @param username El nombre de usuario
+     * @param cancionId El ID de la canción a agregar
+     * @return El usuario actualizado
+     * @throws RuntimeException Si el usuario o la canción no existen, o si la canción ya está en favoritos
+     */
     public Usuario agregarCancionFavorita(String username, String cancionId) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // Buscar la canción existente en la base de datos
         Cancion cancionExistente = cancionRepository.findById(cancionId)
                 .orElseThrow(() -> new RuntimeException("Canción no encontrada"));
 
-        // Inicializar la lista si es null
         if (usuario.getListaFavoritos() == null) {
             usuario.setListaFavoritos(new LinkedList<>());
         }
 
-        // Verificar que no esté duplicada
         boolean yaExiste = usuario.getListaFavoritos().stream()
                 .anyMatch(c -> c.getSongId().equals(cancionId));
 
@@ -83,11 +127,18 @@ public class UsuarioService {
             throw new RuntimeException("La canción ya está en favoritos");
         }
 
-        // Agregar la canción existente (con todas sus referencias intactas)
         usuario.getListaFavoritos().add(cancionExistente);
         return usuarioRepository.save(usuario);
     }
 
+    /**
+     * Agrega un artista a la lista de artistas favoritos del usuario.
+     *
+     * @param username El nombre de usuario
+     * @param artista El artista a agregar
+     * @return El usuario actualizado
+     * @throws RuntimeException Si el usuario no existe
+     */
     public Usuario agregarArtistaFavorito(String username, Artista artista) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -95,15 +146,31 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
+    /**
+     * Permite a un usuario seguir a otro usuario.
+     *
+     * @param username El nombre de usuario que sigue
+     * @param aSeguir El usuario a seguir
+     * @return El usuario actualizado
+     * @throws RuntimeException Si el usuario no existe
+     */
     public Usuario seguirUsuario(String username, Usuario aSeguir) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         usuario.getSiguiendo().add(aSeguir);
         aSeguir.getSeguidores().add(usuario);
-        usuarioRepository.save(aSeguir); // actualizar usuario que se sigue
+        usuarioRepository.save(aSeguir);
         return usuarioRepository.save(usuario);
     }
 
+    /**
+     * Permite a un usuario dejar de seguir a otro usuario.
+     *
+     * @param username El nombre de usuario que deja de seguir
+     * @param aDejar El usuario a dejar de seguir
+     * @return El usuario actualizado
+     * @throws RuntimeException Si el usuario no existe
+     */
     public Usuario dejarDeSeguirUsuario(String username, Usuario aDejar) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -113,10 +180,22 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
+    /**
+     * Obtiene la lista de todos los usuarios del sistema.
+     *
+     * @return Lista de usuarios
+     */
     public List<Usuario> listarUsuarios() {
         return usuarioRepository.findAll();
     }
 
+    /**
+     * Busca un usuario por su identificador (username o correo).
+     *
+     * @param identificador El username o correo del usuario
+     * @return El usuario encontrado
+     * @throws RuntimeException Si el usuario no existe
+     */
     public Usuario buscarIdentificador(String identificador) {
         Optional<Usuario> usuario = usuarioRepository.findByUsername(identificador);
         if (usuario.isEmpty()) {
@@ -125,12 +204,28 @@ public class UsuarioService {
         return usuario.orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
 
+    /**
+     * Verifica la palabra secreta de un usuario.
+     *
+     * @param username El nombre de usuario
+     * @param palabraSecreta La palabra secreta a verificar
+     * @return true si la palabra secreta coincide, false en caso contrario
+     * @throws RuntimeException Si el usuario no existe
+     */
     public boolean verificarPalabraSecreta(String username, String palabraSecreta) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         return usuario.getPalabraSecreta().equals(palabraSecreta);
     }
 
+    /**
+     * Actualiza la contraseña de un usuario.
+     *
+     * @param username El nombre de usuario
+     * @param nuevaPassword La nueva contraseña
+     * @return El usuario actualizado
+     * @throws RuntimeException Si el usuario no existe
+     */
     public Usuario actualizarPassword(String username, String nuevaPassword) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -139,7 +234,11 @@ public class UsuarioService {
     }
 
     /**
-     * Eliminar canción de favoritos
+     * Elimina una canción de la lista de favoritos del usuario.
+     *
+     * @param username El nombre de usuario
+     * @param cancionId El ID de la canción a eliminar
+     * @throws RuntimeException Si el usuario no existe o no tiene canciones favoritas
      */
     public void eliminarCancionFavorita(String username, String cancionId) {
         Usuario usuario = buscarIdentificador(username);
@@ -154,7 +253,11 @@ public class UsuarioService {
     }
 
     /**
-     * Eliminar artista de favoritos
+     * Elimina un artista de la lista de artistas favoritos del usuario.
+     *
+     * @param username El nombre de usuario
+     * @param artistaId El ID del artista a eliminar
+     * @throws RuntimeException Si el usuario no existe o no tiene artistas favoritos
      */
     public void eliminarArtistaFavorito(String username, String artistaId) {
         Usuario usuario = buscarIdentificador(username);
@@ -169,7 +272,11 @@ public class UsuarioService {
     }
 
     /**
-     * Eliminar álbum de favoritos
+     * Elimina un álbum de la lista de álbumes favoritos del usuario.
+     *
+     * @param username El nombre de usuario
+     * @param albumId El ID del álbum a eliminar
+     * @throws RuntimeException Si el usuario no existe, no tiene álbumes favoritos o el álbum no está en favoritos
      */
     public void eliminarAlbumFavorito(String username, String albumId) {
         Usuario usuario = usuarioRepository.findById(username)
@@ -189,22 +296,23 @@ public class UsuarioService {
         }
 
         usuarioRepository.save(usuario);
-        System.out.println("✅ Álbum eliminado de favoritos: " + album.getNombre());
     }
 
     /**
-     * RF-009: Generar reporte CSV completo del usuario
-     * Incluye: información del usuario, canciones favoritas, artistas favoritos,
-     * álbumes favoritos, seguidores y seguidos
+     * Genera un reporte CSV completo del usuario.
+     * Incluye información del usuario, canciones favoritas, artistas favoritos,
+     * álbumes favoritos, seguidores y seguidos.
+     *
+     * @param username El nombre de usuario
+     * @return String con el reporte CSV formateado
+     * @throws RuntimeException Si el usuario no existe
      */
     public String generarReporteCSV(String username) {
         Usuario usuario = buscarIdentificador(username);
         StringBuilder csv = new StringBuilder();
         LocalDateTime ahora = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-        // ============================================
-        // ENCABEZADO DEL REPORTE
-        // ============================================
+
         csv.append("╔════════════════════════════════════════════════════════════╗\n");
         csv.append("║          REPORTE DE USUARIO - SYNCUP                       ║\n");
         csv.append("║          Sistema de Streaming Musical                      ║\n");
@@ -215,9 +323,7 @@ public class UsuarioService {
         csv.append("\n");
         csv.append("════════════════════════════════════════════════════════════\n");
         csv.append("\n");
-        // ============================================
-        // SECCIÓN 1: INFORMACIÓN DEL USUARIO
-        // ============================================
+
         csv.append("━━━ INFORMACIÓN DEL USUARIO ━━━\n");
         csv.append("\n");
         csv.append("Campo,Valor\n");
@@ -228,9 +334,6 @@ public class UsuarioService {
         csv.append("Fecha del Reporte,\"").append(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))).append("\"\n");
         csv.append("\n");
 
-        // ============================================
-        // SECCIÓN 2: ESTADÍSTICAS GENERALES
-        // ============================================
         int totalCanciones = usuario.getListaFavoritos() != null ? usuario.getListaFavoritos().size() : 0;
         int totalArtistas = usuario.getArtistasFavoritos() != null ? usuario.getArtistasFavoritos().size() : 0;
         int totalAlbumes = usuario.getAlbumesFavoritos() != null ? usuario.getAlbumesFavoritos().size() : 0;
@@ -246,9 +349,7 @@ public class UsuarioService {
         csv.append("Seguidores,").append(totalSeguidores).append("\n");
         csv.append("Siguiendo,").append(totalSiguiendo).append("\n");
         csv.append("\n");
-        // ============================================
-        // SECCIÓN 3: CANCIONES FAVORITAS
-        // ============================================
+
         csv.append("━━━ CANCIONES FAVORITAS (").append(totalCanciones).append(") ━━━\n");
         csv.append("\n");
 
@@ -277,9 +378,6 @@ public class UsuarioService {
         }
         csv.append("\n");
 
-        // ============================================
-        // SECCIÓN 4: ARTISTAS FAVORITOS
-        // ============================================
         csv.append("━━━ ARTISTAS FAVORITOS (").append(totalArtistas).append(") ━━━\n");
         csv.append("\n");
         if (usuario.getArtistasFavoritos() != null && !usuario.getArtistasFavoritos().isEmpty()) {
@@ -305,9 +403,6 @@ public class UsuarioService {
         }
         csv.append("\n");
 
-        // ============================================
-        // SECCIÓN 5: ÁLBUMES FAVORITOS
-        // ============================================
         csv.append("━━━ ÁLBUMES FAVORITOS (").append(totalAlbumes).append(") ━━━\n");
         csv.append("\n");
 
@@ -334,9 +429,6 @@ public class UsuarioService {
         }
         csv.append("\n");
 
-        // ============================================
-        // SECCIÓN 6: SEGUIDORES
-        // ============================================
         csv.append("━━━ SEGUIDORES (").append(totalSeguidores).append(") ━━━\n");
         csv.append("\n");
 
@@ -361,9 +453,6 @@ public class UsuarioService {
         }
         csv.append("\n");
 
-        // ============================================
-        // SECCIÓN 7: SIGUIENDO
-        // ============================================
         csv.append("━━━ SIGUIENDO (").append(totalSiguiendo).append(") ━━━\n");
         csv.append("\n");
 
@@ -388,9 +477,6 @@ public class UsuarioService {
         }
         csv.append("\n");
 
-        // ============================================
-        // SECCIÓN 8: RESUMEN FINAL
-        // ============================================
         csv.append("════════════════════════════════════════════════════════════\n");
         csv.append("\n");
         csv.append("━━━ RESUMEN FINAL ━━━\n");
@@ -415,7 +501,10 @@ public class UsuarioService {
     }
 
     /**
-     * Escapar comillas dobles en valores CSV
+     * Escapa comillas dobles en valores CSV.
+     *
+     * @param valor El valor a escapar
+     * @return El valor escapado para CSV
      */
     private String escaparCSV(String valor) {
         if (valor == null) {
@@ -425,21 +514,21 @@ public class UsuarioService {
     }
 
     /**
-     * RF-010: Generar reporte global CSV del sistema (Administrador)
-     * Incluye: todos los usuarios, canciones, artistas y álbumes
+     * Genera un reporte global CSV del sistema para administradores.
+     * Incluye: todos los usuarios, canciones, artistas y álbumes.
+     *
+     * @return String con el reporte global CSV formateado
      */
     public String generarReporteGlobalCSV() {
         StringBuilder csv = new StringBuilder();
         LocalDateTime ahora = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-        // Obtener todos los datos
+
         List<Usuario> todosLosUsuarios = usuarioRepository.findAll();
         List<Cancion> todasLasCanciones = cancionRepository.findAll();
         List<Artista> todosLosArtistas = artistaRepository.findAll();
         List<Album> todosLosAlbumes = albumRepository.findAll();
-        // ============================================
-        // ENCABEZADO DEL REPORTE
-        // ============================================
+
         csv.append("╔════════════════════════════════════════════════════════════╗\n");
         csv.append("║       REPORTE GLOBAL DEL SISTEMA - SYNCUP                  ║\n");
         csv.append("║          Sistema de Streaming Musical                      ║\n");
@@ -451,9 +540,7 @@ public class UsuarioService {
         csv.append("\n");
         csv.append("════════════════════════════════════════════════════════════\n");
         csv.append("\n");
-        // ============================================
-        // SECCIÓN 1: RESUMEN EJECUTIVO
-        // ============================================
+
         csv.append("━━━ RESUMEN EJECUTIVO ━━━\n");
         csv.append("\n");
         csv.append("Métrica,Cantidad\n");
@@ -462,7 +549,7 @@ public class UsuarioService {
         csv.append("Total de Artistas,").append(todosLosArtistas.size()).append("\n");
         csv.append("Total de Álbumes,").append(todosLosAlbumes.size()).append("\n");
         csv.append("\n");
-        // Estadísticas adicionales
+
         long usuariosActivos = todosLosUsuarios.stream()
                 .filter(u -> u.getListaFavoritos() != null && !u.getListaFavoritos().isEmpty())
                 .count();
@@ -472,9 +559,7 @@ public class UsuarioService {
         csv.append("Usuarios con Favoritos,").append(usuariosActivos).append("\n");
         csv.append("Total de Conexiones Sociales,").append(totalSeguidoresGlobal).append("\n");
         csv.append("\n");
-        // ============================================
-        // SECCIÓN 2: USUARIOS
-        // ============================================
+
         csv.append("━━━ TODOS LOS USUARIOS (").append(todosLosUsuarios.size()).append(") ━━━\n");
         csv.append("\n");
         csv.append("#,Username,Nombre,Correo,Edad,Canciones Fav,Artistas Fav,Álbumes Fav,Seguidores,Siguiendo\n");
@@ -501,9 +586,7 @@ public class UsuarioService {
                     .append(siguiendoCount).append("\n");
         }
         csv.append("\n");
-        // ============================================
-        // SECCIÓN 3: CANCIONES
-        // ============================================
+
         csv.append("━━━ TODAS LAS CANCIONES (").append(todasLasCanciones.size()).append(") ━━━\n");
         csv.append("\n");
         csv.append("#,ID,Título,Artista,Álbum,Género,Año,Duración (min),URL Imagen,URL Audio\n");
@@ -530,9 +613,7 @@ public class UsuarioService {
                     .append("\"").append(audioUrl).append("\"\n");
         }
         csv.append("\n");
-        // ============================================
-        // SECCIÓN 4: ARTISTAS
-        // ============================================
+
         csv.append("━━━ TODOS LOS ARTISTAS (").append(todosLosArtistas.size()).append(") ━━━\n");
         csv.append("\n");
         csv.append("#,ID,Nombre,País,Género Principal,Total Álbumes,Total Canciones,URL Imagen\n");
@@ -555,9 +636,7 @@ public class UsuarioService {
                     .append("\"").append(imagenUrl).append("\"\n");
         }
         csv.append("\n");
-        // ============================================
-        // SECCIÓN 5: ÁLBUMES
-        // ============================================
+
         csv.append("━━━ TODOS LOS ÁLBUMES (").append(todosLosAlbumes.size()).append(") ━━━\n");
         csv.append("\n");
         csv.append("#,ID,Nombre,Descripción,Artista ID,Total Canciones,Color BG,URL Imagen\n");
@@ -581,9 +660,7 @@ public class UsuarioService {
                     .append("\"").append(imagenUrl).append("\"\n");
         }
         csv.append("\n");
-        // ===========================================
-        // SECCIÓN 6: ESTADÍSTICAS POR GÉNERO
-        // ============================================
+
         csv.append("━━━ ESTADÍSTICAS POR GÉNERO ━━━\n");
         csv.append("\n");
         csv.append("Género,Total Canciones\n");
@@ -599,9 +676,7 @@ public class UsuarioService {
                                 .append(entry.getValue()).append("\n")
                 );
         csv.append("\n");
-        // ============================================
-        // SECCIÓN 7: TOP ARTISTAS MÁS POPULARES
-        // ============================================
+
         csv.append("━━━ TOP 20 ARTISTAS MÁS POPULARES ━━━\n");
         csv.append("\n");
         csv.append("#,Artista,Veces en Favoritos\n");
@@ -618,9 +693,7 @@ public class UsuarioService {
                                 .append(entry.getValue()).append("\n")
                 );
         csv.append("\n");
-        // ============================================
-        // SECCIÓN 8: TOP CANCIONES MÁS POPULARES
-        // ============================================
+
         csv.append("━━━ TOP 20 CANCIONES MÁS POPULARES ━━━\n");
         csv.append("\n");
         csv.append("#,Canción,Artista,Veces en Favoritos\n");
@@ -639,9 +712,7 @@ public class UsuarioService {
                             .append(entry.getValue()).append("\n");
                 });
         csv.append("\n");
-        // ============================================
-        // SECCIÓN 9: RESUMEN FINAL
-        // ============================================
+
         csv.append("════════════════════════════════════════════════════════════\n");
         csv.append("\n");
         csv.append("━━━ RESUMEN FINAL DEL SISTEMA ━━━\n");

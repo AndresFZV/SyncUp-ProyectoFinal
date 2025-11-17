@@ -23,51 +23,56 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+/**
+ * Servicio para gestionar las operaciones de canciones.
+ * Proporciona lógica de negocio para CRUD de canciones, carga masiva y búsquedas relacionadas.
+ *
+ * @author SyncUp Team
+ * @version 1.0
+ */
 @Service
 @RequiredArgsConstructor
 public class CancionService {
 
-    private final ArtistaRepository artistaRepository; // ← Agregar
-    private final AlbumRepository albumRepository; // ← Agregar
+    private final ArtistaRepository artistaRepository;
+    private final AlbumRepository albumRepository;
     private final CancionRepository cancionRepository;
     private final Cloudinary cloudinary;
 
+    /**
+     * Agrega una nueva canción al sistema.
+     *
+     * @param solicitud DTO con los datos de la canción a crear
+     * @return Canción creada
+     * @throws IOException si hay error al subir los archivos multimedia
+     * @throws RuntimeException si el artista no existe
+     */
     public Cancion addCancion(SolicitudCancion solicitud) throws IOException {
-        // 1. Subir el audio a Cloudinary
         Map<String, Object> subidaAudio = cloudinary.uploader().upload(
                 solicitud.getMusica().getBytes(),
                 ObjectUtils.asMap("resource_type", "video")
         );
 
-        // 2. Subir la imagen a Cloudinary
         Map<String, Object> subidaImagen = cloudinary.uploader().upload(
                 solicitud.getArchivoImagen().getBytes(),
                 ObjectUtils.asMap("resource_type", "image")
         );
 
-        // 3. Obtener duración del audio y formatearla
         Double duracionSeg = (Double) subidaAudio.get("duration");
         double duracionMinutos = duracionSeg / 60.0;
 
-        // 4. Buscar el artista por ID
         Artista artista = artistaRepository.findById(solicitud.getArtistaId())
                 .orElseThrow(() -> new RuntimeException("Artista no encontrado"));
 
-        // 5. Buscar el álbum si se proporcionó (opcional)
-        // 5. Buscar el álbum si se proporcionó (opcional)
         Album album = null;
         if (solicitud.getAlbumId() != null
                 && !solicitud.getAlbumId().isEmpty()
                 && !solicitud.getAlbumId().equals("null")) {
 
-            // IMPORTANTE: usar albumRepository.findById, no album.getId()
             album = albumRepository.findById(solicitud.getAlbumId())
                     .orElse(null);
-
-            System.out.println("Álbum encontrado: " + (album != null ? album.getNombre() : "null"));
         }
 
-        // 6. Crear la canción
         Cancion nuevaCancion = Cancion.builder()
                 .titulo(solicitud.getTitulo())
                 .genero(solicitud.getGenero())
@@ -79,19 +84,14 @@ public class CancionService {
                 .album(album)
                 .build();
 
-        // 7. Guardar la canción en la BD
         Cancion cancionGuardada = cancionRepository.save(nuevaCancion);
 
-        // 8. ACTUALIZAR RELACIONES BIDIRECCIONALES
-
-        // Agregar canción a la lista del artista
         if (artista.getCanciones() == null) {
             artista.setCanciones(new LinkedList<>());
         }
         artista.getCanciones().add(cancionGuardada);
         artistaRepository.save(artista);
 
-        // Agregar canción al álbum (si existe)
         if (album != null) {
             if (album.getSongIds() == null) {
                 album.setSongIds(new ArrayList<>());
@@ -100,11 +100,14 @@ public class CancionService {
             albumRepository.save(album);
         }
 
-        System.out.println("✓ Relaciones actualizadas correctamente");
-
         return cancionGuardada;
     }
 
+    /**
+     * Obtiene la lista de todas las canciones en formato DTO.
+     *
+     * @return Lista de canciones DTO
+     */
     public List<CancionDTO> listarCanciones() {
         List<Cancion> canciones = cancionRepository.findAll();
 
@@ -124,15 +127,36 @@ public class CancionService {
         ).collect(Collectors.toList());
     }
 
+    /**
+     * Obtiene una canción por su identificador.
+     *
+     * @param id Identificador único de la canción
+     * @return Canción encontrada
+     * @throws RuntimeException si la canción no existe
+     */
     public Cancion obtenerCancion(String id) {
         return cancionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Canción no encontrada"));
     }
 
+    /**
+     * Agrega una canción al sistema.
+     *
+     * @param cancion Canción a agregar
+     * @return Canción guardada
+     */
     public Cancion agregarCancion(Cancion cancion) {
         return cancionRepository.save(cancion);
     }
 
+    /**
+     * Actualiza una canción existente.
+     *
+     * @param id Identificador de la canción a actualizar
+     * @param cancionActualizada Canción con los nuevos datos
+     * @return Canción actualizada
+     * @throws RuntimeException si la canción no existe
+     */
     public Cancion actualizarCancion(String id, Cancion cancionActualizada) {
         Cancion cancion = cancionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Canción no encontrada"));
@@ -147,11 +171,16 @@ public class CancionService {
         return cancionRepository.save(cancion);
     }
 
+    /**
+     * Elimina una canción del sistema.
+     *
+     * @param id Identificador de la canción a eliminar
+     * @throws RuntimeException si la canción no existe
+     */
     public void eliminarCancion(String id) {
         Cancion cancion = cancionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Canción no encontrada"));
 
-        // Eliminar la canción de las listas del artista
         if (cancion.getArtista() != null) {
             Artista artista = cancion.getArtista();
             if (artista.getCanciones() != null) {
@@ -160,7 +189,6 @@ public class CancionService {
             }
         }
 
-        // Eliminar la canción del álbum
         if (cancion.getAlbum() != null) {
             Album album = cancion.getAlbum();
             if (album.getSongIds() != null) {
@@ -169,33 +197,23 @@ public class CancionService {
             }
         }
 
-        // Finalmente eliminar la canción
         cancionRepository.deleteById(id);
     }
 
-    // Agregar este método al CancionService
+    /**
+     * Realiza una carga masiva de canciones desde archivos.
+     *
+     * @param archivoMetadata Archivo con metadatos de las canciones
+     * @param archivoZip Archivo ZIP con archivos multimedia
+     * @return Número de canciones cargadas exitosamente
+     * @throws IOException si hay error al procesar los archivos
+     */
     public int cargaMasivaConArchivos(MultipartFile archivoMetadata, MultipartFile archivoZip) throws IOException {
-        // Crear directorio temporal
         Path tempDir = Files.createTempDirectory("carga-masiva");
 
         try {
-            // 1. Extraer el ZIP a un directorio temporal
             Map<String, File> archivosExtraidos = extraerZip(archivoZip, tempDir);
-            System.out.println("═══════════════════════════════════════");
-            System.out.println("📦 ARCHIVOS EXTRAÍDOS DEL ZIP:");
-            System.out.println("═══════════════════════════════════════");
-            if (archivosExtraidos.isEmpty()) {
-                System.out.println("⚠️ ¡EL ZIP ESTÁ VACÍO O NO SE EXTRAJO NADA!");
-            } else {
-                archivosExtraidos.forEach((nombre, archivo) -> {
-                    System.out.println("  ✓ [" + nombre + "] → " + archivo.getAbsolutePath());
-                });
-            }
-            System.out.println("═══════════════════════════════════════");
-            System.out.println("Total archivos extraídos: " + archivosExtraidos.size());
-            System.out.println("═══════════════════════════════════════");
 
-            // 2. Leer el archivo de metadata
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(archivoMetadata.getInputStream(), StandardCharsets.UTF_8)
             );
@@ -210,7 +228,6 @@ public class CancionService {
 
                 String[] datos = linea.split(";");
 
-                // Formato: Titulo;ArtistaId;AlbumId;Genero;Año;NombreImagen;NombreMP3
                 if (datos.length >= 7) {
                     try {
                         String titulo = datos[0].trim();
@@ -221,42 +238,34 @@ public class CancionService {
                         String nombreImagen = datos[5].trim();
                         String nombreMP3 = datos[6].trim();
 
-                        // Verificar que los archivos existen
                         File archivoImagen = archivosExtraidos.get(nombreImagen);
                         File archivoMP3 = archivosExtraidos.get(nombreMP3);
 
                         if (archivoImagen == null || archivoMP3 == null) {
-                            System.err.println("Archivos no encontrados para: " + titulo);
                             continue;
                         }
 
-                        // Buscar artista
                         Artista artista = artistaRepository.findById(artistaId)
                                 .orElseThrow(() -> new RuntimeException("Artista no encontrado: " + artistaId));
 
-                        // Buscar álbum (opcional)
                         Album album = null;
                         if (!albumId.isEmpty() && !albumId.equals("null")) {
                             album = albumRepository.findById(albumId).orElse(null);
                         }
 
-                        // Subir imagen a Cloudinary
                         Map<String, Object> subidaImagen = cloudinary.uploader().upload(
                                 archivoImagen,
                                 ObjectUtils.asMap("resource_type", "image")
                         );
 
-                        // Subir MP3 a Cloudinary
                         Map<String, Object> subidaAudio = cloudinary.uploader().upload(
                                 archivoMP3,
                                 ObjectUtils.asMap("resource_type", "video")
                         );
 
-                        // Calcular duración
                         Double duracionSeg = (Double) subidaAudio.get("duration");
                         double duracionMinutos = duracionSeg / 60.0;
 
-                        // Crear canción
                         Cancion nuevaCancion = Cancion.builder()
                                 .titulo(titulo)
                                 .genero(genero)
@@ -270,7 +279,6 @@ public class CancionService {
 
                         Cancion cancionGuardada = cancionRepository.save(nuevaCancion);
 
-                        // Actualizar relaciones
                         if (artista.getCanciones() == null) {
                             artista.setCanciones(new LinkedList<>());
                         }
@@ -286,10 +294,8 @@ public class CancionService {
                         }
 
                         contador++;
-                        System.out.println("✓ Canción cargada: " + titulo);
 
                     } catch (Exception e) {
-                        System.err.println("Error al procesar línea: " + linea + " - " + e.getMessage());
                         e.printStackTrace();
                     }
                 }
@@ -299,12 +305,18 @@ public class CancionService {
             return contador;
 
         } finally {
-            // Limpiar archivos temporales
             eliminarDirectorio(tempDir.toFile());
         }
     }
 
-    // Método auxiliar para extraer ZIP
+    /**
+     * Extrae los archivos de un archivo ZIP.
+     *
+     * @param archivoZip Archivo ZIP a extraer
+     * @param directorioDestino Directorio donde extraer los archivos
+     * @return Mapa de nombres de archivo a archivos extraídos
+     * @throws IOException si hay error al extraer el ZIP
+     */
     private Map<String, File> extraerZip(MultipartFile archivoZip, Path directorioDestino) throws IOException {
         Map<String, File> archivos = new HashMap<>();
 
@@ -316,7 +328,6 @@ public class CancionService {
                     String nombreArchivo = new File(entry.getName()).getName();
                     File archivoDestino = directorioDestino.resolve(nombreArchivo).toFile();
 
-                    // Copiar el contenido
                     try (FileOutputStream fos = new FileOutputStream(archivoDestino)) {
                         byte[] buffer = new byte[1024];
                         int len;
@@ -334,7 +345,11 @@ public class CancionService {
         return archivos;
     }
 
-    // Método auxiliar para eliminar directorio temporal
+    /**
+     * Elimina un directorio y todo su contenido recursivamente.
+     *
+     * @param directorio Directorio a eliminar
+     */
     private void eliminarDirectorio(File directorio) {
         if (directorio.exists()) {
             File[] archivos = directorio.listFiles();
@@ -351,9 +366,12 @@ public class CancionService {
         }
     }
 
-// ... otros métodos del servicio
-
-    // Obtener canciones por álbum
+    /**
+     * Obtiene las canciones de un álbum específico.
+     *
+     * @param albumId Identificador del álbum
+     * @return Lista de canciones DTO del álbum
+     */
     public List<CancionDTO> obtenerCancionesPorAlbum(String albumId) {
         List<Cancion> canciones = cancionRepository.findByAlbumId(albumId);
         return canciones.stream()
@@ -361,7 +379,12 @@ public class CancionService {
                 .collect(Collectors.toList());
     }
 
-
+    /**
+     * Convierte una entidad Cancion a un DTO CancionDTO.
+     *
+     * @param cancion Entidad Cancion a convertir
+     * @return DTO CancionDTO convertido
+     */
     private CancionDTO convertirADTO(Cancion cancion) {
         CancionDTO.CancionDTOBuilder builder = CancionDTO.builder()
                 .songId(cancion.getSongId())
@@ -370,15 +393,13 @@ public class CancionService {
                 .anio(cancion.getAnio())
                 .duracion(cancion.getDuracion())
                 .imagenUrl(cancion.getImagenUrl())
-                .musica(cancion.getMusica()); // ← Tu campo se llama "musica"
+                .musica(cancion.getMusica());
 
-        // Información del artista desde @DBRef
         if (cancion.getArtista() != null) {
             builder.artistaId(cancion.getArtista().getArtistId());
             builder.artistaNombre(cancion.getArtista().getNombre());
         }
 
-        // Información del álbum desde @DBRef
         if (cancion.getAlbum() != null) {
             builder.albumId(cancion.getAlbum().getId());
             builder.albumNombre(cancion.getAlbum().getNombre());
@@ -388,39 +409,41 @@ public class CancionService {
     }
 
     /**
-     * Obtener canciones similares (mismo género)
+     * Obtiene canciones similares basadas en el género de una canción.
+     *
+     * @param cancionId Identificador de la canción de referencia
+     * @param limite Número máximo de canciones similares a retornar
+     * @return Lista de canciones similares en formato DTO
+     * @throws RuntimeException si la canción no existe
      */
     public List<CancionDTO> obtenerCancionesSimilares(String cancionId, int limite) {
-        // Obtener la canción base
         Cancion cancionBase = cancionRepository.findById(cancionId)
                 .orElseThrow(() -> new RuntimeException("Canción no encontrada"));
 
         String genero = cancionBase.getGenero();
 
-        // Buscar canciones del mismo género
         List<Cancion> todasDelGenero = cancionRepository.findByGenero(genero);
 
-        // Filtrar la canción actual y mezclar
         List<Cancion> similares = todasDelGenero.stream()
                 .filter(c -> !c.getSongId().equals(cancionId))
                 .collect(Collectors.toList());
 
         Collections.shuffle(similares);
 
-        // Limitar resultados
         similares = similares.stream()
                 .limit(limite)
                 .collect(Collectors.toList());
 
-        // Convertir a DTO
         return similares.stream()
                 .map(this::convertirCancionADTO)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Convertir Cancion a CancionDTO
-     * Método unificado para evitar duplicación
+     * Convierte una entidad Cancion a un DTO CancionDTO.
+     *
+     * @param cancion Entidad Cancion a convertir
+     * @return DTO CancionDTO convertido
      */
     private CancionDTO convertirCancionADTO(Cancion cancion) {
         CancionDTO.CancionDTOBuilder builder = CancionDTO.builder()
@@ -432,13 +455,11 @@ public class CancionService {
                 .imagenUrl(cancion.getImagenUrl())
                 .musica(cancion.getMusica());
 
-        // Información del artista desde @DBRef
         if (cancion.getArtista() != null) {
             builder.artistaId(cancion.getArtista().getArtistId());
             builder.artistaNombre(cancion.getArtista().getNombre());
         }
 
-        // Información del álbum desde @DBRef
         if (cancion.getAlbum() != null) {
             builder.albumId(cancion.getAlbum().getId());
             builder.albumNombre(cancion.getAlbum().getNombre());
@@ -447,9 +468,11 @@ public class CancionService {
         return builder.build();
     }
 
-
     /**
-     * Obtener canciones por artista
+     * Obtiene las canciones de un artista específico.
+     *
+     * @param artistaId Identificador del artista
+     * @return Lista de canciones DTO del artista
      */
     public List<CancionDTO> obtenerCancionesPorArtista(String artistaId) {
         List<Cancion> canciones = cancionRepository.findByArtistaId(artistaId);
@@ -457,7 +480,4 @@ public class CancionService {
                 .map(this::convertirCancionADTO)
                 .collect(Collectors.toList());
     }
-
-
-
 }

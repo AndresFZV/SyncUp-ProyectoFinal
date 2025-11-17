@@ -17,29 +17,51 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Map;
 
+/**
+ * Servicio para gestionar las operaciones de artistas.
+ * Proporciona lógica de negocio para CRUD de artistas y conversión a DTO.
+ *
+ * @author SyncUp Team
+ * @version 1.0
+ */
 @Service
 @RequiredArgsConstructor
 public class ArtistaService {
     private final ArtistaRepository artistaRepository;
     private final Cloudinary cloudinary;
 
-    // Listar todos los artistas
+    /**
+     * Obtiene la lista de todos los artistas.
+     *
+     * @return Lista de todos los artistas en el sistema
+     */
     public List<Artista> listarArtistas() {
         return artistaRepository.findAll();
     }
 
-    // Obtener artista por ID (objeto Artista - para uso interno/admin)
+    /**
+     * Obtiene un artista por su identificador.
+     *
+     * @param id Identificador único del artista
+     * @return Artista encontrado
+     * @throws RuntimeException si el artista no existe
+     */
     public Artista obtenerArtista(String id) {
         return artistaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Artista no encontrado"));
     }
 
-    // ← NUEVO: Obtener artista con detalles completos (para frontend de usuario)
+    /**
+     * Obtiene un artista con detalles completos en formato DTO.
+     *
+     * @param id Identificador único del artista
+     * @return ArtistaDTO con información detallada del artista
+     * @throws RuntimeException si el artista no existe
+     */
     public ArtistaDTO obtenerArtistaDetalle(String id) {
         Artista artista = artistaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Artista no encontrado"));
 
-        // Mapear álbumes usando AlbumDTO
         List<AlbumDTO> albumesDTO = new ArrayList<>();
         if (artista.getAlbumes() != null && !artista.getAlbumes().isEmpty()) {
             albumesDTO = artista.getAlbumes().stream()
@@ -56,7 +78,6 @@ public class ArtistaService {
                     .collect(Collectors.toList());
         }
 
-        // Mapear canciones usando CancionDTO
         List<CancionDTO> cancionesDTO = new ArrayList<>();
         if (artista.getCanciones() != null && !artista.getCanciones().isEmpty()) {
             cancionesDTO = artista.getCanciones().stream()
@@ -85,13 +106,19 @@ public class ArtistaService {
                 .imagenUrl(artista.getImagenUrl())
                 .totalCanciones(cancionesDTO.size())
                 .totalAlbumes(albumesDTO.size())
-                .oyentesMensuales(34746428) // Valor de ejemplo
+                .oyentesMensuales(34746428)
                 .albumes(albumesDTO)
                 .canciones(cancionesDTO)
                 .build();
     }
 
-    // Agregar artista
+    /**
+     * Agrega un nuevo artista al sistema.
+     *
+     * @param solicitudArtista DTO con los datos del artista a crear
+     * @return Artista creado
+     * @throws IOException si hay error al subir la imagen
+     */
     public Artista addArtista(SolicitudArtista solicitudArtista) throws IOException {
         Map<String, Object> imagenSubida = cloudinary.uploader().upload(
                 solicitudArtista.getImagenUrl().getBytes(),
@@ -109,7 +136,15 @@ public class ArtistaService {
         return artistaRepository.save(nuevoArtista);
     }
 
-    // Actualizar artista
+    /**
+     * Actualiza un artista existente.
+     *
+     * @param id Identificador del artista a actualizar
+     * @param solicitudArtista DTO con los nuevos datos del artista
+     * @return Artista actualizado
+     * @throws IOException si hay error al subir la nueva imagen
+     * @throws RuntimeException si el artista no existe
+     */
     public Artista actualizarArtista(String id, SolicitudArtista solicitudArtista) throws IOException {
         Artista artista = artistaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Artista no encontrado"));
@@ -130,7 +165,12 @@ public class ArtistaService {
         return artistaRepository.save(artista);
     }
 
-    // Eliminar artista
+    /**
+     * Elimina un artista del sistema.
+     *
+     * @param id Identificador del artista a eliminar
+     * @throws RuntimeException si el artista no existe
+     */
     public void eliminarArtista(String id) {
         if (!artistaRepository.existsById(id)) {
             throw new RuntimeException("Artista no encontrado");
@@ -138,7 +178,11 @@ public class ArtistaService {
         artistaRepository.deleteById(id);
     }
 
-    // Listar artistas como DTO (sin detalles de álbumes/canciones - para listados)
+    /**
+     * Obtiene la lista de todos los artistas en formato DTO.
+     *
+     * @return Lista de artistas DTO
+     */
     public List<ArtistaDTO> listarArtistasDTO() {
         List<Artista> artistas = artistaRepository.findAll();
 

@@ -11,10 +11,17 @@ import com.uniquindio.edu.co.SyncUp.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedList;  // ← CAMBIAR: Usar LinkedList en lugar de ArrayList
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio para gestionar las operaciones de favoritos de usuarios.
+ * Proporciona funcionalidades para manejar artistas y álbumes favoritos.
+ *
+ * @author SyncUp Team
+ * @version 1.0
+ */
 @Service
 @RequiredArgsConstructor
 public class FavoritoService {
@@ -23,14 +30,19 @@ public class FavoritoService {
     private final ArtistaRepository artistaRepository;
     private final AlbumRepository albumRepository;
 
-    // ========== OBTENER FAVORITOS ==========
-
+    /**
+     * Obtiene la lista de artistas favoritos de un usuario.
+     *
+     * @param username Nombre de usuario del cual obtener los artistas favoritos
+     * @return Lista de artistas favoritos en formato DTO
+     * @throws RuntimeException si el usuario no existe
+     */
     public List<ArtistaDTO> obtenerArtistasFavoritos(String username) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         if (usuario.getArtistasFavoritos() == null || usuario.getArtistasFavoritos().isEmpty()) {
-            return new LinkedList<>();  // ← CAMBIAR: LinkedList
+            return new LinkedList<>();
         }
 
         return usuario.getArtistasFavoritos().stream()
@@ -47,12 +59,19 @@ public class FavoritoService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Obtiene la lista de álbumes favoritos de un usuario.
+     *
+     * @param username Nombre de usuario del cual obtener los álbumes favoritos
+     * @return Lista de álbumes favoritos en formato DTO
+     * @throws RuntimeException si el usuario no existe
+     */
     public List<AlbumDTO> obtenerAlbumesFavoritos(String username) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         if (usuario.getAlbumesFavoritos() == null || usuario.getAlbumesFavoritos().isEmpty()) {
-            return new LinkedList<>();  // ← CAMBIAR: LinkedList
+            return new LinkedList<>();
         }
 
         return usuario.getAlbumesFavoritos().stream()
@@ -60,8 +79,14 @@ public class FavoritoService {
                 .collect(Collectors.toList());
     }
 
-    // ========== VERIFICAR SI ES FAVORITO ==========
-
+    /**
+     * Verifica si un artista está en la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario a verificar
+     * @param artistaId Identificador del artista a verificar
+     * @return true si el artista es favorito, false en caso contrario
+     * @throws RuntimeException si el usuario no existe
+     */
     public boolean esArtistaFavorito(String username, String artistaId) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -74,6 +99,14 @@ public class FavoritoService {
                 .anyMatch(a -> a.getArtistId().equals(artistaId));
     }
 
+    /**
+     * Verifica si un álbum está en la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario a verificar
+     * @param albumId Identificador del álbum a verificar
+     * @return true si el álbum es favorito, false en caso contrario
+     * @throws RuntimeException si el usuario no existe
+     */
     public boolean esAlbumFavorito(String username, String albumId) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -86,8 +119,13 @@ public class FavoritoService {
                 .anyMatch(a -> a.getId().equals(albumId));
     }
 
-    // ========== AGREGAR A FAVORITOS ==========
-
+    /**
+     * Agrega un artista a la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario al cual agregar el artista favorito
+     * @param artistaId Identificador del artista a agregar
+     * @throws RuntimeException si el usuario o artista no existen
+     */
     public void agregarArtistaFavorito(String username, String artistaId) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -96,7 +134,7 @@ public class FavoritoService {
                 .orElseThrow(() -> new RuntimeException("Artista no encontrado"));
 
         if (usuario.getArtistasFavoritos() == null) {
-            usuario.setArtistasFavoritos(new LinkedList<>());  // ← CAMBIAR: LinkedList
+            usuario.setArtistasFavoritos(new LinkedList<>());
         }
 
         boolean yaExiste = usuario.getArtistasFavoritos().stream()
@@ -108,6 +146,13 @@ public class FavoritoService {
         }
     }
 
+    /**
+     * Agrega un álbum a la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario al cual agregar el álbum favorito
+     * @param albumId Identificador del álbum a agregar
+     * @throws RuntimeException si el usuario o álbum no existen
+     */
     public void agregarAlbumFavorito(String username, String albumId) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -116,7 +161,7 @@ public class FavoritoService {
                 .orElseThrow(() -> new RuntimeException("Álbum no encontrado"));
 
         if (usuario.getAlbumesFavoritos() == null) {
-            usuario.setAlbumesFavoritos(new LinkedList<>());  // ← CAMBIAR: LinkedList
+            usuario.setAlbumesFavoritos(new LinkedList<>());
         }
 
         boolean yaExiste = usuario.getAlbumesFavoritos().stream()
@@ -128,8 +173,13 @@ public class FavoritoService {
         }
     }
 
-    // ========== ELIMINAR DE FAVORITOS ==========
-
+    /**
+     * Elimina un artista de la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario del cual eliminar el artista favorito
+     * @param artistaId Identificador del artista a eliminar
+     * @throws RuntimeException si el usuario no existe
+     */
     public void eliminarArtistaFavorito(String username, String artistaId) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -140,6 +190,13 @@ public class FavoritoService {
         }
     }
 
+    /**
+     * Elimina un álbum de la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario del cual eliminar el álbum favorito
+     * @param albumId Identificador del álbum a eliminar
+     * @throws RuntimeException si el usuario no existe
+     */
     public void eliminarAlbumFavorito(String username, String albumId) {
         Usuario usuario = usuarioRepository.findById(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -150,8 +207,12 @@ public class FavoritoService {
         }
     }
 
-    // ========== MÉTODO AUXILIAR ==========
-
+    /**
+     * Convierte una entidad Album a un DTO AlbumDTO.
+     *
+     * @param album Entidad Album a convertir
+     * @return DTO AlbumDTO convertido
+     */
     private AlbumDTO convertirAlbumADTO(Album album) {
         String artistaNombre = "Sin artista";
 
@@ -177,5 +238,4 @@ public class FavoritoService {
                 .totalCanciones(album.getSongIds() != null ? album.getSongIds().size() : 0)
                 .build();
     }
-
 }

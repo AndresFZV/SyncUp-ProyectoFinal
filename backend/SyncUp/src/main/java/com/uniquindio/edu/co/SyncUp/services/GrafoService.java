@@ -15,6 +15,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio para gestionar las operaciones del grafo de similitud entre canciones.
+ * Proporciona funcionalidades para búsqueda de canciones similares y rutas de similitud.
+ *
+ * @author SyncUp Team
+ * @version 1.0
+ */
 @Service
 @RequiredArgsConstructor
 public class GrafoService {
@@ -23,17 +30,16 @@ public class GrafoService {
     private final CancionRepository cancionRepository;
 
     /**
-     * Construir el grafo cuando la aplicación esté lista
-     * CAMBIO: Usar @EventListener en lugar de @PostConstruct
+     * Inicializa el grafo cuando la aplicación está lista.
      */
     @EventListener(ApplicationReadyEvent.class)
     public void inicializarGrafo() {
-        System.out.println("🔄 Inicializando grafo de similitud...");
+        System.out.println("Inicializando grafo de similitud...");
         reconstruirGrafo();
     }
 
     /**
-     * Reconstruir el grafo completo
+     * Reconstruye el grafo completo con todas las canciones disponibles.
      */
     public void reconstruirGrafo() {
         List<Cancion> canciones = cancionRepository.findAll();
@@ -41,7 +47,11 @@ public class GrafoService {
     }
 
     /**
-     * Obtener canciones similares a una canción dada
+     * Obtiene canciones similares a una canción específica.
+     *
+     * @param cancionId Identificador de la canción de referencia
+     * @param limite Número máximo de canciones similares a retornar
+     * @return Lista de canciones similares en formato DTO
      */
     public List<CancionDTO> obtenerCancionesSimilares(String cancionId, int limite) {
         List<String> idsCancionesSimilares = grafo.obtenerCancionesSimilares(cancionId, limite);
@@ -54,36 +64,38 @@ public class GrafoService {
     }
 
     /**
-     * Encontrar ruta de máxima similitud entre dos canciones (Dijkstra)
+     * Encuentra la ruta de máxima similitud entre dos canciones usando el algoritmo de Dijkstra.
+     *
+     * @param origenId Identificador de la canción de origen
+     * @param destinoId Identificador de la canción de destino
+     * @return Mapa con información de la ruta encontrada
+     * @throws RuntimeException si no se encuentra una ruta válida
      */
     public Map<String, Object> encontrarRutaSimilitud(String origenId, String destinoId) {
-        System.out.println("\n🔍 BUSCANDO RUTA:");
+        System.out.println("\nBUSCANDO RUTA:");
         System.out.println("   Origen: " + origenId);
         System.out.println("   Destino: " + destinoId);
 
         List<String> ruta = grafo.encontrarRutaMaximaSimilitud(origenId, destinoId);
 
-        System.out.println("   📊 Ruta encontrada: " + ruta.size() + " nodos");
+        System.out.println("   Ruta encontrada: " + ruta.size() + " nodos");
 
-        // Validar que no haya duplicados
         Set<String> rutaSet = new HashSet<>(ruta);
         if (rutaSet.size() != ruta.size()) {
-            System.out.println("   ❌ ERROR: Ruta contiene duplicados");
+            System.out.println("   ERROR: Ruta contiene duplicados");
             throw new RuntimeException("Error en el algoritmo: ruta con nodos duplicados");
         }
 
-        // Validar longitud máxima
         if (ruta.size() > 100) {
-            System.out.println("   ⚠️ Ruta demasiado larga: " + ruta.size() + " pasos");
+            System.out.println("   Ruta demasiado larga: " + ruta.size() + " pasos");
             throw new RuntimeException("La ruta es demasiado larga. Puede haber un error.");
         }
 
         if (ruta.isEmpty() || ruta.size() < 2) {
-            System.out.println("   ❌ No se encontró ruta válida");
+            System.out.println("   No se encontró ruta válida");
             throw new RuntimeException("No se encontró una ruta entre estas canciones");
         }
 
-        // Construir respuesta
         List<CancionDTO> cancionesRuta = ruta.stream()
                 .map(id -> cancionRepository.findById(id).orElse(null))
                 .filter(cancion -> cancion != null)
@@ -92,12 +104,11 @@ public class GrafoService {
 
         int similitudTotal = calcularSimilitudRuta(ruta);
 
-        System.out.println("   ✅ Ruta construida:");
+        System.out.println("   Ruta construida:");
         for (int i = 0; i < cancionesRuta.size(); i++) {
             System.out.println("      " + (i + 1) + ". " + cancionesRuta.get(i).getTitulo());
         }
-        System.out.println("   💯 Similitud total: " + similitudTotal);
-        System.out.println("══════════════════════════════════════\n");
+        System.out.println("   Similitud total: " + similitudTotal);
 
         return Map.of(
                 "origen", origenId,
@@ -109,14 +120,19 @@ public class GrafoService {
     }
 
     /**
-     * Obtener estadísticas del grafo
+     * Obtiene estadísticas del grafo actual.
+     *
+     * @return Mapa con estadísticas del grafo
      */
     public Map<String, Object> obtenerEstadisticas() {
         return grafo.obtenerEstadisticas();
     }
 
     /**
-     * Calcular similitud total de una ruta
+     * Calcula la similitud total de una ruta específica.
+     *
+     * @param ruta Lista de identificadores de canciones que forman la ruta
+     * @return Puntuación total de similitud de la ruta
      */
     private int calcularSimilitudRuta(List<String> ruta) {
         int similitudTotal = 0;
@@ -135,7 +151,10 @@ public class GrafoService {
     }
 
     /**
-     * Convertir Cancion a CancionDTO
+     * Convierte una entidad Cancion a un DTO CancionDTO.
+     *
+     * @param cancion Entidad Cancion a convertir
+     * @return DTO CancionDTO convertido
      */
     private CancionDTO convertirACancionDTO(Cancion cancion) {
         return CancionDTO.builder()

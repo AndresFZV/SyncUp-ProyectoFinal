@@ -20,6 +20,13 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio para gestionar las operaciones del Trie de autocompletado.
+ * Proporciona funcionalidades para búsqueda por prefijo y gestión del índice de texto.
+ *
+ * @author SyncUp Team
+ * @version 1.0
+ */
 @Service
 @RequiredArgsConstructor
 public class TrieService {
@@ -33,30 +40,26 @@ public class TrieService {
     private final UsuarioRepository usuarioRepository;
 
     /**
-     * Inicializar el Trie cuando la aplicación esté lista
+     * Inicializa el Trie cuando la aplicación está lista.
      */
     @EventListener(ApplicationReadyEvent.class)
     public void inicializarTrie() {
-        System.out.println("🌳 Inicializando Trie para autocompletado...");
+        System.out.println("Inicializando Trie para autocompletado...");
         reconstruirTrie();
     }
 
     /**
-     * Reconstruir el Trie con todos los datos
+     * Reconstruye el Trie con todos los datos del sistema.
      */
     public void reconstruirTrie() {
         long inicio = System.currentTimeMillis();
         trie.limpiar();
 
-        // ========================================
-        // INDEXAR CANCIONES
-        // ========================================
         List<Cancion> canciones = cancionRepository.findAll();
-        System.out.println("🎵 Indexando canciones: " + canciones.size());
+        System.out.println("Indexando canciones: " + canciones.size());
 
         for (Cancion cancion : canciones) {
             if (cancion.getSongId() == null) {
-                System.err.println("⚠️ Canción sin ID: " + cancion.getTitulo());
                 continue;
             }
 
@@ -71,19 +74,12 @@ public class TrieService {
             }
         }
 
-        // ========================================
-        // INDEXAR ARTISTAS
-        // ========================================
         List<Artista> artistas = artistaRepository.findAll();
-        System.out.println("========================================");
-        System.out.println("🎤 INDEXANDO ARTISTAS");
-        System.out.println("========================================");
-        System.out.println("Total de artistas en BD: " + artistas.size());
+        System.out.println("Indexando artistas: " + artistas.size());
 
         int artistasIndexados = 0;
         for (Artista artista : artistas) {
             if (artista.getArtistId() == null) {
-                System.err.println("⚠️ Artista sin ID: " + artista.getNombre());
                 continue;
             }
 
@@ -95,18 +91,11 @@ public class TrieService {
             }
         }
 
-        System.out.println("✅ Artistas indexados: " + artistasIndexados + " de " + artistas.size());
-        System.out.println("========================================");
-
-        // ========================================
-        // INDEXAR ÁLBUMES
-        // ========================================
         List<Album> albums = albumRepository.findAll();
-        System.out.println("💿 Indexando álbumes: " + albums.size());
+        System.out.println("Indexando álbumes: " + albums.size());
 
         for (Album album : albums) {
             if (album.getId() == null) {
-                System.err.println("⚠️ Álbum sin ID: " + album.getNombre());
                 continue;
             }
 
@@ -121,61 +110,38 @@ public class TrieService {
             }
         }
 
-        // ========================================
-        // INDEXAR USUARIOS
-        // ========================================
         List<Usuario> usuarios = usuarioRepository.findAll();
-        System.out.println("========================================");
-        System.out.println("👤 INDEXANDO USUARIOS");
-        System.out.println("========================================");
-        System.out.println("Total de usuarios en BD: " + usuarios.size());
+        System.out.println("Indexando usuarios: " + usuarios.size());
 
         int usuariosIndexados = 0;
         for (Usuario usuario : usuarios) {
-            System.out.println("---");
-            System.out.println("Usuario: " + usuario.getNombre());
-            System.out.println("  username (campo @Id): " + usuario.getUsername());
-            System.out.println("  Correo: " + usuario.getCorreo());
-
             if (usuario.getUsername() == null) {
-                System.err.println("  ❌ SIN USERNAME - NO SE INDEXA");
                 continue;
             }
 
-            // Indexar nombre del usuario
             if (usuario.getNombre() != null && !usuario.getNombre().isEmpty()) {
-                System.out.println("  📝 Indexando nombre: '" + usuario.getNombre() + "'");
                 trie.insertarTexto(usuario.getNombre(), usuario.getUsername(), "usuario");
             }
 
-            // Indexar username
-            System.out.println("  📝 Indexando username: '" + usuario.getUsername() + "'");
             trie.insertarTexto(usuario.getUsername(), usuario.getUsername(), "usuario");
-
             usuariosIndexados++;
-            System.out.println("  ✅ Usuario indexado correctamente");
         }
 
-        System.out.println("========================================");
-        System.out.println("✅ Usuarios indexados: " + usuariosIndexados + " de " + usuarios.size());
-        System.out.println("========================================");
-
-        // ========================================
-        // RESUMEN FINAL
-        // ========================================
         long fin = System.currentTimeMillis();
-        System.out.println("========================================");
-        System.out.println("✅ Trie inicializado en " + (fin - inicio) + "ms");
-        System.out.println("   📊 Palabras indexadas: " + trie.getTotalPalabras());
-        System.out.println("   🎵 Canciones: " + canciones.size());
-        System.out.println("   🎤 Artistas: " + artistas.size());
-        System.out.println("   💿 Álbumes: " + albums.size());
-        System.out.println("   👤 Usuarios: " + usuarios.size());
-        System.out.println("========================================");
+        System.out.println("Trie inicializado en " + (fin - inicio) + "ms");
+        System.out.println("Palabras indexadas: " + trie.getTotalPalabras());
+        System.out.println("Canciones: " + canciones.size());
+        System.out.println("Artistas: " + artistas.size());
+        System.out.println("Álbumes: " + albums.size());
+        System.out.println("Usuarios: " + usuarios.size());
     }
 
     /**
-     * RF-026: Buscar por prefijo y devolver resultados completos
+     * Busca por prefijo y devuelve resultados completos organizados por tipo de entidad.
+     *
+     * @param prefijo Prefijo a buscar
+     * @param limite Número máximo de resultados por tipo de entidad
+     * @return Resultado de búsqueda con todas las entidades encontradas
      */
     public ResultadoBusquedaDTO buscarPorPrefijo(String prefijo, int limite) {
         long inicio = System.currentTimeMillis();
@@ -194,28 +160,24 @@ public class TrieService {
 
         Map<String, Set<String>> entidades = trie.buscarEntidadesPorPrefijo(prefijo);
 
-        // Obtener canciones
         List<Cancion> canciones = entidades.get("canciones").stream()
                 .limit(limite)
                 .map(id -> cancionRepository.findById(id).orElse(null))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        // Obtener artistas
         List<Artista> artistas = entidades.get("artistas").stream()
                 .limit(limite)
                 .map(artistId -> artistaRepository.findById(artistId).orElse(null))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        // Obtener álbumes
         List<Album> albums = entidades.get("albums").stream()
                 .limit(limite)
                 .map(id -> albumRepository.findById(id).orElse(null))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        // Obtener usuarios
         List<UsuarioDTO> usuarios = entidades.get("usuarios").stream()
                 .limit(limite)
                 .map(username -> {
@@ -227,12 +189,6 @@ public class TrieService {
 
         long fin = System.currentTimeMillis();
         long tiempoBusqueda = fin - inicio;
-
-        System.out.println("🔍 Búsqueda: '" + prefijo + "' en " + tiempoBusqueda + "ms");
-        System.out.println("   Canciones: " + canciones.size());
-        System.out.println("   Artistas: " + artistas.size());
-        System.out.println("   Álbumes: " + albums.size());
-        System.out.println("   Usuarios: " + usuarios.size());
 
         return ResultadoBusquedaDTO.builder()
                 .prefijo(prefijo)
@@ -246,7 +202,11 @@ public class TrieService {
     }
 
     /**
-     * Obtener sugerencias de texto (solo palabras)
+     * Obtiene sugerencias de texto basadas en un prefijo.
+     *
+     * @param prefijo Prefijo para generar sugerencias
+     * @param limite Número máximo de sugerencias a retornar
+     * @return Lista de sugerencias de texto
      */
     public List<String> obtenerSugerencias(String prefijo, int limite) {
         if (prefijo == null || prefijo.trim().isEmpty()) {
@@ -260,7 +220,9 @@ public class TrieService {
     }
 
     /**
-     * Obtener estadísticas del Trie
+     * Obtiene estadísticas del Trie y del sistema.
+     *
+     * @return Mapa con estadísticas del Trie y conteos de entidades
      */
     public Map<String, Object> obtenerEstadisticas() {
         Map<String, Object> stats = new HashMap<>(trie.obtenerEstadisticas());
@@ -272,16 +234,21 @@ public class TrieService {
     }
 
     /**
-     * Verificar si una palabra existe
+     * Verifica si una palabra existe en el Trie.
+     *
+     * @param palabra Palabra a verificar
+     * @return true si la palabra existe, false en caso contrario
      */
     public boolean existe(String palabra) {
         return trie.existe(palabra);
     }
 
-    // ========================================
-    // MÉTODOS PARA BÚSQUEDA AVANZADA
-    // ========================================
-
+    /**
+     * Obtiene los identificadores de canciones que coinciden con un prefijo.
+     *
+     * @param prefijo Prefijo a buscar
+     * @return Conjunto de identificadores de canciones
+     */
     public Set<String> obtenerIdsCanciones(String prefijo) {
         if (prefijo == null || prefijo.trim().isEmpty()) {
             return new HashSet<>();
@@ -290,6 +257,12 @@ public class TrieService {
         return entidades.get("canciones");
     }
 
+    /**
+     * Obtiene los identificadores de artistas que coinciden con un prefijo.
+     *
+     * @param prefijo Prefijo a buscar
+     * @return Conjunto de identificadores de artistas
+     */
     public Set<String> obtenerIdsArtistas(String prefijo) {
         if (prefijo == null || prefijo.trim().isEmpty()) {
             return new HashSet<>();
@@ -298,6 +271,12 @@ public class TrieService {
         return entidades.get("artistas");
     }
 
+    /**
+     * Obtiene los identificadores de álbumes que coinciden con un prefijo.
+     *
+     * @param prefijo Prefijo a buscar
+     * @return Conjunto de identificadores de álbumes
+     */
     public Set<String> obtenerIdsAlbumes(String prefijo) {
         if (prefijo == null || prefijo.trim().isEmpty()) {
             return new HashSet<>();
@@ -306,6 +285,12 @@ public class TrieService {
         return entidades.get("albums");
     }
 
+    /**
+     * Obtiene los identificadores de usuarios que coinciden con un prefijo.
+     *
+     * @param prefijo Prefijo a buscar
+     * @return Conjunto de identificadores de usuarios
+     */
     public Set<String> obtenerIdsUsuarios(String prefijo) {
         if (prefijo == null || prefijo.trim().isEmpty()) {
             return new HashSet<>();

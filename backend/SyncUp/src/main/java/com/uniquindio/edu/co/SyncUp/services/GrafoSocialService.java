@@ -13,8 +13,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Servicio para gestionar el Grafo Social y generar sugerencias
- * RF-008: Sugerencias de usuarios para seguir
+ * Servicio para gestionar el grafo social y generar sugerencias de usuarios.
+ * Proporciona funcionalidades para análisis de conexiones y recomendaciones sociales.
+ *
+ * @author SyncUp Team
+ * @version 1.0
  */
 @Slf4j
 @Service
@@ -25,7 +28,9 @@ public class GrafoSocialService {
     private final UsuarioRepository usuarioRepository;
     private final UsuarioService usuarioService;
 
-    // Configuración
+    /**
+     * Configuración para el algoritmo de sugerencias.
+     */
     private static final int MAX_SUGERENCIAS = 10;
     private static final int MIN_CONEXIONES_COMUNES = 1;
     private static final double PESO_CONEXIONES_COMUNES = 0.5;
@@ -33,30 +38,31 @@ public class GrafoSocialService {
     private static final double PESO_DISTANCIA = 0.2;
 
     /**
-     * Inicializar o reconstruir el grafo social
+     * Inicializa o reconstruye el grafo social con todos los usuarios.
      */
     public void reconstruirGrafo() {
-        log.info("🔄 Reconstruyendo grafo social...");
+        log.info("Reconstruyendo grafo social...");
         List<Usuario> todosLosUsuarios = usuarioRepository.findAll();
         grafoSocial.construirGrafo(todosLosUsuarios);
-        log.info("✅ Grafo reconstruido exitosamente");
+        log.info("Grafo reconstruido exitosamente");
     }
 
     /**
-     * RF-008: Obtener sugerencias de usuarios para seguir
-     * Basado en amigos de amigos (BFS nivel 2) y scoring
+     * Obtiene sugerencias de usuarios para seguir basadas en conexiones sociales.
+     *
+     * @param username Nombre de usuario para el cual generar sugerencias
+     * @param limite Número máximo de sugerencias a retornar
+     * @return Lista de sugerencias de usuarios para seguir
      */
     public List<Map<String, Object>> obtenerSugerencias(String username, int limite) {
-        log.info("🎯 Generando sugerencias para: {}", username);
+        log.info("Generando sugerencias para: {}", username);
 
-        // Verificar si el grafo está construido
         if (grafoSocial.estaVacio()) {
             reconstruirGrafo();
         }
 
         Usuario usuario = usuarioService.buscarIdentificador(username);
 
-        // Obtener usuarios ya seguidos
         Set<String> yaSigue = new HashSet<>();
         if (usuario.getSiguiendo() != null) {
             yaSigue = usuario.getSiguiendo().stream()
@@ -64,12 +70,10 @@ public class GrafoSocialService {
                     .map(Usuario::getUsername)
                     .collect(Collectors.toSet());
         }
-        yaSigue.add(username); // No sugerirse a sí mismo
+        yaSigue.add(username);
 
-        // 1. Obtener candidatos usando BFS (amigos de amigos - nivel 2)
         Set<String> amigosDeAmigos = grafoSocial.obtenerAmigosDeAmigos(username);
 
-        // 2. Si no hay suficientes candidatos, expandir a nivel 3
         Set<String> candidatos = new HashSet<>(amigosDeAmigos);
         if (candidatos.size() < limite) {
             Set<String> nivel3 = AlgoritmoBFS.obtenerUsuariosEnNivel(
@@ -80,7 +84,6 @@ public class GrafoSocialService {
             candidatos.addAll(nivel3);
         }
 
-        // 3. Si aún no hay suficientes, agregar usuarios populares
         if (candidatos.size() < limite) {
             List<Usuario> populares = obtenerUsuariosPopulares(yaSigue, limite - candidatos.size());
             candidatos.addAll(populares.stream()
@@ -88,7 +91,6 @@ public class GrafoSocialService {
                     .collect(Collectors.toSet()));
         }
 
-        // 4. Calcular score para cada candidato
         List<SugerenciaUsuario> sugerencias = new ArrayList<>();
 
         for (String candidato : candidatos) {
@@ -97,22 +99,18 @@ public class GrafoSocialService {
             Usuario usuarioCandidato = usuarioService.buscarIdentificador(candidato);
             if (usuarioCandidato == null) continue;
 
-            // Calcular conexiones en común
             int conexionesComunes = calcularConexionesComunes(usuario, usuarioCandidato);
 
-            // Filtrar si no cumple mínimo de conexiones comunes
             if (amigosDeAmigos.contains(candidato) && conexionesComunes < MIN_CONEXIONES_COMUNES) {
                 continue;
             }
 
-            // Calcular score de relevancia
             double score = calcularScore(
                     conexionesComunes,
                     usuarioCandidato.getSeguidores() != null ? usuarioCandidato.getSeguidores().size() : 0,
                     grafoSocial.calcularGradoSeparacion(username, candidato)
             );
 
-            // Obtener amigos en común (para mostrar al usuario)
             List<String> amigosEnComun = obtenerAmigosEnComun(usuario, usuarioCandidato);
 
             sugerencias.add(new SugerenciaUsuario(
@@ -127,34 +125,40 @@ public class GrafoSocialService {
             ));
         }
 
-        // 5. Ordenar por score y limitar
         List<Map<String, Object>> resultado = sugerencias.stream()
                 .sorted(Comparator.comparingDouble(SugerenciaUsuario::getScore).reversed())
                 .limit(limite)
                 .map(this::convertirSugerenciaAMap)
                 .collect(Collectors.toList());
 
-        log.info("✅ Generadas {} sugerencias para {}", resultado.size(), username);
+        log.info("Generadas {} sugerencias para {}", resultado.size(), username);
         return resultado;
     }
 
     /**
-     * Calcular score de relevancia para una sugerencia
+     * Calcula el score de relevancia para una sugerencia.
+     *
+     * @param conexionesComunes Número de conexiones en común
+     * @param seguidores Número de seguidores del candidato
+     * @param distancia Distancia en el grafo social
+     * @return Score de relevancia calculado
      */
     private double calcularScore(int conexionesComunes, int seguidores, int distancia) {
-        // Normalizar valores
         double scoreConexiones = Math.min(conexionesComunes / 10.0, 1.0);
         double scoreSeguidores = Math.min(seguidores / 1000.0, 1.0);
         double scoreDistancia = distancia > 0 ? 1.0 / distancia : 0.0;
 
-        // Calcular score ponderado
         return (scoreConexiones * PESO_CONEXIONES_COMUNES) +
                 (scoreSeguidores * PESO_SEGUIDORES) +
                 (scoreDistancia * PESO_DISTANCIA);
     }
 
     /**
-     * Calcular conexiones en común entre dos usuarios
+     * Calcula las conexiones en común entre dos usuarios.
+     *
+     * @param usuario1 Primer usuario
+     * @param usuario2 Segundo usuario
+     * @return Número de conexiones en común
      */
     private int calcularConexionesComunes(Usuario usuario1, Usuario usuario2) {
         if (usuario1.getSiguiendo() == null || usuario2.getSeguidores() == null) {
@@ -176,7 +180,11 @@ public class GrafoSocialService {
     }
 
     /**
-     * Obtener lista de amigos en común
+     * Obtiene la lista de amigos en común entre dos usuarios.
+     *
+     * @param usuario1 Primer usuario
+     * @param usuario2 Segundo usuario
+     * @return Lista de nombres de usuario de amigos en común
      */
     private List<String> obtenerAmigosEnComun(Usuario usuario1, Usuario usuario2) {
         if (usuario1.getSiguiendo() == null || usuario2.getSeguidores() == null) {
@@ -192,12 +200,16 @@ public class GrafoSocialService {
                 .filter(Objects::nonNull)
                 .map(Usuario::getUsername)
                 .filter(siguiendo1::contains)
-                .limit(5) // Limitar a 5 para no saturar
+                .limit(5)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Obtener usuarios populares como fallback
+     * Obtiene usuarios populares como fallback para sugerencias.
+     *
+     * @param excluir Conjunto de usuarios a excluir
+     * @param limite Número máximo de usuarios a retornar
+     * @return Lista de usuarios populares
      */
     private List<Usuario> obtenerUsuariosPopulares(Set<String> excluir, int limite) {
         return usuarioRepository.findAll().stream()
@@ -213,7 +225,10 @@ public class GrafoSocialService {
     }
 
     /**
-     * Convertir sugerencia a Map para respuesta JSON
+     * Convierte una sugerencia a un mapa para respuesta JSON.
+     *
+     * @param sugerencia Sugerencia a convertir
+     * @return Mapa con los datos de la sugerencia
      */
     private Map<String, Object> convertirSugerenciaAMap(SugerenciaUsuario sugerencia) {
         Map<String, Object> map = new HashMap<>();
@@ -229,7 +244,10 @@ public class GrafoSocialService {
     }
 
     /**
-     * Obtener información de conexiones de un usuario
+     * Obtiene información de conexiones de un usuario.
+     *
+     * @param username Nombre de usuario del cual obtener la información
+     * @return Mapa con información de conexiones del usuario
      */
     public Map<String, Object> obtenerInformacionConexiones(String username) {
         if (grafoSocial.estaVacio()) {
@@ -240,7 +258,11 @@ public class GrafoSocialService {
     }
 
     /**
-     * Encontrar camino entre dos usuarios
+     * Encuentra el camino más corto entre dos usuarios.
+     *
+     * @param origen Usuario de origen
+     * @param destino Usuario de destino
+     * @return Mapa con información del camino encontrado
      */
     public Map<String, Object> encontrarCamino(String origen, String destino) {
         if (grafoSocial.estaVacio()) {
@@ -265,7 +287,9 @@ public class GrafoSocialService {
     }
 
     /**
-     * Obtener estadísticas del grafo
+     * Obtiene estadísticas del grafo social.
+     *
+     * @return Mapa con estadísticas del grafo
      */
     public Map<String, Object> obtenerEstadisticas() {
         if (grafoSocial.estaVacio()) {
@@ -276,27 +300,112 @@ public class GrafoSocialService {
     }
 
     /**
-     * Actualizar grafo cuando un usuario sigue a otro
+     * Actualiza el grafo cuando un usuario sigue a otro.
+     *
+     * @param seguidor Usuario que sigue
+     * @param seguido Usuario seguido
      */
     public void actualizarSeguimiento(String seguidor, String seguido) {
         if (!grafoSocial.estaVacio()) {
             grafoSocial.agregarConexion(seguidor, seguido);
-            log.info("➕ Conexión agregada: {} ↔ {}", seguidor, seguido);
+            log.info("Conexión agregada: {} ↔ {}", seguidor, seguido);
         }
     }
 
     /**
-     * Actualizar grafo cuando un usuario deja de seguir a otro
+     * Actualiza el grafo cuando un usuario deja de seguir a otro.
+     *
+     * @param seguidor Usuario que deja de seguir
+     * @param seguido Usuario dejado de seguir
      */
     public void actualizarDejarDeSeguir(String seguidor, String seguido) {
         if (!grafoSocial.estaVacio()) {
             grafoSocial.eliminarConexion(seguidor, seguido);
-            log.info("➖ Conexión eliminada: {} ↔ {}", seguidor, seguido);
+            log.info("Conexión eliminada: {} ↔ {}", seguidor, seguido);
         }
     }
 
     /**
-     * Clase interna para representar una sugerencia
+     * Obtiene la estructura completa del grafo para visualización.
+     *
+     * @param username Usuario central para la estructura
+     * @param profundidad Profundidad máxima de conexiones a mostrar
+     * @return Mapa con la estructura del grafo
+     */
+    public Map<String, Object> obtenerEstructuraGrafo(String username, int profundidad) {
+        log.info("Obteniendo estructura del grafo para: {} (profundidad: {})", username, profundidad);
+
+        if (grafoSocial.estaVacio()) {
+            reconstruirGrafo();
+        }
+
+        Map<String, Object> estructura = new HashMap<>();
+        List<Map<String, Object>> nodos = new ArrayList<>();
+        List<Map<String, Object>> aristas = new ArrayList<>();
+        Set<String> nodosVisitados = new HashSet<>();
+
+        Queue<String> cola = new LinkedList<>();
+        Map<String, Integer> niveles = new HashMap<>();
+
+        cola.offer(username);
+        niveles.put(username, 0);
+        nodosVisitados.add(username);
+
+        while (!cola.isEmpty()) {
+            String actual = cola.poll();
+            int nivelActual = niveles.get(actual);
+
+            Nodo nodo = grafoSocial.obtenerNodo(actual);
+            if (nodo != null) {
+                Map<String, Object> nodoData = new HashMap<>();
+                nodoData.put("id", actual);
+                nodoData.put("label", actual);
+                nodoData.put("nivel", nivelActual);
+                nodoData.put("grado", nodo.getGrado());
+                nodos.add(nodoData);
+            }
+
+            if (nivelActual < profundidad) {
+                Set<String> vecinos = grafoSocial.obtenerVecinos(actual);
+
+                for (String vecino : vecinos) {
+                    Map<String, Object> arista = new HashMap<>();
+                    String from = actual.compareTo(vecino) < 0 ? actual : vecino;
+                    String to = actual.compareTo(vecino) < 0 ? vecino : actual;
+
+                    arista.put("from", actual);
+                    arista.put("to", vecino);
+                    arista.put("id", from + "-" + to);
+
+                    boolean aristaExiste = aristas.stream()
+                            .anyMatch(a -> a.get("id").equals(from + "-" + to));
+
+                    if (!aristaExiste) {
+                        aristas.add(arista);
+                    }
+
+                    if (!nodosVisitados.contains(vecino)) {
+                        nodosVisitados.add(vecino);
+                        niveles.put(vecino, nivelActual + 1);
+                        cola.offer(vecino);
+                    }
+                }
+            }
+        }
+
+        estructura.put("nodos", nodos);
+        estructura.put("aristas", aristas);
+        estructura.put("usuarioOrigen", username);
+        estructura.put("profundidad", profundidad);
+        estructura.put("totalNodos", nodos.size());
+        estructura.put("totalAristas", aristas.size());
+
+        log.info("Estructura obtenida: {} nodos, {} aristas", nodos.size(), aristas.size());
+        return estructura;
+    }
+
+    /**
+     * Clase interna para representar una sugerencia de usuario.
      */
     private static class SugerenciaUsuario {
         private String username;
@@ -331,89 +440,4 @@ public class GrafoSocialService {
         public int getGradoSeparacion() { return gradoSeparacion; }
         public double getScore() { return score; }
     }
-
-    /**
-     * Obtener estructura completa del grafo para visualización
-     * Incluye todos los nodos y aristas hasta cierta profundidad
-     */
-    public Map<String, Object> obtenerEstructuraGrafo(String username, int profundidad) {
-        log.info("🔍 Obteniendo estructura del grafo para: {} (profundidad: {})", username, profundidad);
-
-        if (grafoSocial.estaVacio()) {
-            reconstruirGrafo();
-        }
-
-        Map<String, Object> estructura = new HashMap<>();
-        List<Map<String, Object>> nodos = new ArrayList<>();
-        List<Map<String, Object>> aristas = new ArrayList<>();
-        Set<String> nodosVisitados = new HashSet<>();
-
-        // BFS para obtener nodos hasta cierta profundidad
-        Queue<String> cola = new LinkedList<>();
-        Map<String, Integer> niveles = new HashMap<>();
-
-        cola.offer(username);
-        niveles.put(username, 0);
-        nodosVisitados.add(username);
-
-        while (!cola.isEmpty()) {
-            String actual = cola.poll();
-            int nivelActual = niveles.get(actual);
-
-            // Agregar nodo
-            Nodo nodo = grafoSocial.obtenerNodo(actual);
-            if (nodo != null) {
-                Map<String, Object> nodoData = new HashMap<>();
-                nodoData.put("id", actual);
-                nodoData.put("label", actual);
-                nodoData.put("nivel", nivelActual);
-                nodoData.put("grado", nodo.getGrado());
-                nodos.add(nodoData);
-            }
-
-            // Si no hemos alcanzado la profundidad máxima, procesar vecinos
-            if (nivelActual < profundidad) {
-                Set<String> vecinos = grafoSocial.obtenerVecinos(actual);
-
-                for (String vecino : vecinos) {
-                    // Agregar arista (evitar duplicados en grafo no dirigido)
-                    Map<String, Object> arista = new HashMap<>();
-                    // Ordenar para evitar duplicados: A-B y B-A
-                    String from = actual.compareTo(vecino) < 0 ? actual : vecino;
-                    String to = actual.compareTo(vecino) < 0 ? vecino : actual;
-
-                    arista.put("from", actual);  // Mantener dirección original para visualización
-                    arista.put("to", vecino);
-                    arista.put("id", from + "-" + to);  // ID único
-
-                    // Solo agregar si no existe ya
-                    boolean aristaExiste = aristas.stream()
-                            .anyMatch(a -> a.get("id").equals(from + "-" + to));
-
-                    if (!aristaExiste) {
-                        aristas.add(arista);
-                    }
-
-                    // Agregar vecino a la cola si no ha sido visitado
-                    if (!nodosVisitados.contains(vecino)) {
-                        nodosVisitados.add(vecino);
-                        niveles.put(vecino, nivelActual + 1);
-                        cola.offer(vecino);
-                    }
-                }
-            }
-        }
-
-        estructura.put("nodos", nodos);
-        estructura.put("aristas", aristas);
-        estructura.put("usuarioOrigen", username);
-        estructura.put("profundidad", profundidad);
-        estructura.put("totalNodos", nodos.size());
-        estructura.put("totalAristas", aristas.size());
-
-        log.info("✅ Estructura obtenida: {} nodos, {} aristas", nodos.size(), aristas.size());
-        return estructura;
-    }
-
-
 }

@@ -19,6 +19,13 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio para gestionar búsquedas avanzadas con soporte para concurrencia.
+ * Proporciona funcionalidades de búsqueda combinando múltiples criterios y tipos de entidades.
+ *
+ * @author SyncUp Team
+ * @version 1.0
+ */
 @Service
 @RequiredArgsConstructor
 public class BusquedaAvanzadaService {
@@ -29,11 +36,17 @@ public class BusquedaAvanzadaService {
     private final UsuarioRepository usuarioRepository;
     private final TrieService trieService;
 
+    /**
+     * Realiza una búsqueda avanzada con múltiples criterios y concurrencia.
+     *
+     * @param criterios DTO con los criterios de búsqueda
+     * @return Resultado de la búsqueda con métricas de rendimiento
+     */
     public ResultadoBusquedaAvanzadaDTO busquedaAvanzada(BusquedaAvanzadaDTO criterios) {
         long inicio = System.currentTimeMillis();
         Map<String, Long> tiemposPorHilo = new HashMap<>();
 
-        System.out.println("🔍 Búsqueda avanzada iniciada");
+        System.out.println("Búsqueda avanzada iniciada");
         System.out.println("   Query: " + criterios.getQuery());
         System.out.println("   Artista: " + criterios.getArtista());
         System.out.println("   Género: " + criterios.getGenero());
@@ -62,7 +75,7 @@ public class BusquedaAvanzadaService {
             long fin = System.currentTimeMillis();
             long tiempoTotal = fin - inicio;
 
-            System.out.println("✅ Búsqueda completada en " + tiempoTotal + "ms");
+            System.out.println("Búsqueda completada en " + tiempoTotal + "ms");
             System.out.println("   Canciones: " + canciones.size());
             System.out.println("   Artistas: " + artistas.size());
             System.out.println("   Álbumes: " + albums.size());
@@ -81,7 +94,7 @@ public class BusquedaAvanzadaService {
                     .build();
 
         } catch (Exception e) {
-            System.err.println("❌ Error en búsqueda avanzada: " + e.getMessage());
+            System.err.println("Error en búsqueda avanzada: " + e.getMessage());
             e.printStackTrace();
 
             return ResultadoBusquedaAvanzadaDTO.builder()
@@ -95,6 +108,13 @@ public class BusquedaAvanzadaService {
         }
     }
 
+    /**
+     * Busca canciones de forma asíncrona según los criterios especificados.
+     *
+     * @param criterios Criterios de búsqueda
+     * @param tiemposPorHilo Mapa para registrar tiempos de ejecución
+     * @return Future con la lista de canciones encontradas
+     */
     @Async("searchTaskExecutor")
     public CompletableFuture<List<Cancion>> buscarCancionesAsync(
             BusquedaAvanzadaDTO criterios,
@@ -103,19 +123,26 @@ public class BusquedaAvanzadaService {
         String threadName = Thread.currentThread().getName();
         long inicioHilo = System.currentTimeMillis();
 
-        System.out.println("🧵 [" + threadName + "] Buscando canciones...");
+        System.out.println("[" + threadName + "] Buscando canciones...");
 
         List<Cancion> resultado = buscarCanciones(criterios);
 
         long finHilo = System.currentTimeMillis();
         tiemposPorHilo.put(threadName + "-canciones", finHilo - inicioHilo);
 
-        System.out.println("✅ [" + threadName + "] Canciones: " + resultado.size() +
+        System.out.println("[" + threadName + "] Canciones: " + resultado.size() +
                 " (" + (finHilo - inicioHilo) + "ms)");
 
         return CompletableFuture.completedFuture(resultado);
     }
 
+    /**
+     * Busca artistas de forma asíncrona según los criterios especificados.
+     *
+     * @param criterios Criterios de búsqueda
+     * @param tiemposPorHilo Mapa para registrar tiempos de ejecución
+     * @return Future con la lista de artistas encontrados
+     */
     @Async("searchTaskExecutor")
     public CompletableFuture<List<Artista>> buscarArtistasAsync(
             BusquedaAvanzadaDTO criterios,
@@ -124,19 +151,26 @@ public class BusquedaAvanzadaService {
         String threadName = Thread.currentThread().getName();
         long inicioHilo = System.currentTimeMillis();
 
-        System.out.println("🧵 [" + threadName + "] Buscando artistas...");
+        System.out.println("[" + threadName + "] Buscando artistas...");
 
         List<Artista> resultado = buscarArtistas(criterios);
 
         long finHilo = System.currentTimeMillis();
         tiemposPorHilo.put(threadName + "-artistas", finHilo - inicioHilo);
 
-        System.out.println("✅ [" + threadName + "] Artistas: " + resultado.size() +
+        System.out.println("[" + threadName + "] Artistas: " + resultado.size() +
                 " (" + (finHilo - inicioHilo) + "ms)");
 
         return CompletableFuture.completedFuture(resultado);
     }
 
+    /**
+     * Busca álbumes de forma asíncrona según los criterios especificados.
+     *
+     * @param criterios Criterios de búsqueda
+     * @param tiemposPorHilo Mapa para registrar tiempos de ejecución
+     * @return Future con la lista de álbumes encontrados
+     */
     @Async("searchTaskExecutor")
     public CompletableFuture<List<Album>> buscarAlbumsAsync(
             BusquedaAvanzadaDTO criterios,
@@ -145,19 +179,26 @@ public class BusquedaAvanzadaService {
         String threadName = Thread.currentThread().getName();
         long inicioHilo = System.currentTimeMillis();
 
-        System.out.println("🧵 [" + threadName + "] Buscando álbumes...");
+        System.out.println("[" + threadName + "] Buscando álbumes...");
 
         List<Album> resultado = buscarAlbums(criterios);
 
         long finHilo = System.currentTimeMillis();
         tiemposPorHilo.put(threadName + "-albums", finHilo - inicioHilo);
 
-        System.out.println("✅ [" + threadName + "] Álbumes: " + resultado.size() +
+        System.out.println("[" + threadName + "] Álbumes: " + resultado.size() +
                 " (" + (finHilo - inicioHilo) + "ms)");
 
         return CompletableFuture.completedFuture(resultado);
     }
 
+    /**
+     * Busca usuarios de forma asíncrona según los criterios especificados.
+     *
+     * @param criterios Criterios de búsqueda
+     * @param tiemposPorHilo Mapa para registrar tiempos de ejecución
+     * @return Future con la lista de usuarios encontrados
+     */
     @Async("searchTaskExecutor")
     public CompletableFuture<List<UsuarioDTO>> buscarUsuariosAsync(
             BusquedaAvanzadaDTO criterios,
@@ -166,19 +207,25 @@ public class BusquedaAvanzadaService {
         String threadName = Thread.currentThread().getName();
         long inicioHilo = System.currentTimeMillis();
 
-        System.out.println("🧵 [" + threadName + "] Buscando usuarios...");
+        System.out.println("[" + threadName + "] Buscando usuarios...");
 
         List<UsuarioDTO> resultado = buscarUsuarios(criterios);
 
         long finHilo = System.currentTimeMillis();
         tiemposPorHilo.put(threadName + "-usuarios", finHilo - inicioHilo);
 
-        System.out.println("✅ [" + threadName + "] Usuarios: " + resultado.size() +
+        System.out.println("[" + threadName + "] Usuarios: " + resultado.size() +
                 " (" + (finHilo - inicioHilo) + "ms)");
 
         return CompletableFuture.completedFuture(resultado);
     }
 
+    /**
+     * Busca canciones según los criterios especificados.
+     *
+     * @param criterios Criterios de búsqueda
+     * @return Lista de canciones que cumplen con los criterios
+     */
     private List<Cancion> buscarCanciones(BusquedaAvanzadaDTO criterios) {
         List<Cancion> canciones;
 
@@ -206,6 +253,13 @@ public class BusquedaAvanzadaService {
         return canciones.stream().limit(limite).collect(Collectors.toList());
     }
 
+    /**
+     * Aplica filtros con lógica AND a la lista de canciones.
+     *
+     * @param canciones Lista de canciones a filtrar
+     * @param criterios Criterios de filtrado
+     * @return Lista de canciones filtradas
+     */
     private List<Cancion> aplicarFiltrosAND(List<Cancion> canciones, BusquedaAvanzadaDTO criterios) {
         return canciones.stream()
                 .filter(c -> {
@@ -236,6 +290,13 @@ public class BusquedaAvanzadaService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Aplica filtros con lógica OR a la lista de canciones.
+     *
+     * @param canciones Lista de canciones a filtrar
+     * @param criterios Criterios de filtrado
+     * @return Lista de canciones filtradas
+     */
     private List<Cancion> aplicarFiltrosOR(List<Cancion> canciones, BusquedaAvanzadaDTO criterios) {
         return canciones.stream()
                 .filter(c -> {
@@ -263,6 +324,12 @@ public class BusquedaAvanzadaService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Busca artistas según los criterios especificados.
+     *
+     * @param criterios Criterios de búsqueda
+     * @return Lista de artistas que cumplen con los criterios
+     */
     private List<Artista> buscarArtistas(BusquedaAvanzadaDTO criterios) {
         if (!criterios.tieneQuery()) {
             return new ArrayList<>();
@@ -278,6 +345,12 @@ public class BusquedaAvanzadaService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Busca álbumes según los criterios especificados.
+     *
+     * @param criterios Criterios de búsqueda
+     * @return Lista de álbumes que cumplen con los criterios
+     */
     private List<Album> buscarAlbums(BusquedaAvanzadaDTO criterios) {
         if (!criterios.tieneQuery()) {
             return new ArrayList<>();
@@ -293,6 +366,12 @@ public class BusquedaAvanzadaService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Busca usuarios según los criterios especificados.
+     *
+     * @param criterios Criterios de búsqueda
+     * @return Lista de usuarios que cumplen con los criterios
+     */
     private List<UsuarioDTO> buscarUsuarios(BusquedaAvanzadaDTO criterios) {
         if (!criterios.tieneQuery()) {
             return new ArrayList<>();
