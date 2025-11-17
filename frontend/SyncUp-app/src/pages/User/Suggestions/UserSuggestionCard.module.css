@@ -1,0 +1,272 @@
+.card {
+  background: rgba(24, 24, 24, 0.6);
+  border-radius: 16px;
+  padding: 24px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.card:hover {
+  background: rgba(40, 40, 40, 0.8);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 32px rgba(164, 53, 240, 0.3);
+  border-color: rgba(164, 53, 240, 0.3);
+}
+
+.card.siguiendo {
+  background: rgba(29, 185, 84, 0.1);
+  border-color: rgba(29, 185, 84, 0.3);
+}
+
+/* Avatar */
+.avatarContainer {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a435f0 0%, #8b2fc9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 48px;
+  box-shadow: 0 4px 16px rgba(164, 53, 240, 0.4);
+  transition: all 0.3s ease;
+}
+
+.card:hover .avatar {
+  transform: scale(1.05);
+  box-shadow: 0 6px 24px rgba(164, 53, 240, 0.6);
+}
+
+.checkmark {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1db954;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  border: 3px solid rgba(24, 24, 24, 0.8);
+  animation: checkmarkPop 0.3s ease;
+}
+
+@keyframes checkmarkPop {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Info del usuario */
+.userInfo {
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.nombre {
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 4px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.username {
+  font-size: 14px;
+  color: #a435f0;
+  margin: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Estadísticas */
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #b3b3b3;
+  justify-content: center;
+}
+
+.statIcon {
+  font-size: 16px;
+  color: #a435f0;
+}
+
+.statText {
+  font-weight: 500;
+}
+
+/* Amigos en común */
+.amigosComunes {
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(164, 53, 240, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(164, 53, 240, 0.2);
+}
+
+.amigosLabel {
+  font-size: 12px;
+  color: #a435f0;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.amigosLista {
+  font-size: 13px;
+  color: white;
+  margin: 0;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Botones */
+.acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.btnSeguir {
+  padding: 12px 24px;
+  background: #a435f0;
+  border: none;
+  border-radius: 24px;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btnSeguir:hover:not(:disabled) {
+  background: #8a2be2;
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(164, 53, 240, 0.5);
+}
+
+.btnSeguir:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnSiguiendo {
+  background: #1db954;
+}
+
+.btnSiguiendo:hover {
+  background: #1ed760;
+}
+
+.btnVerPerfil {
+  padding: 10px 24px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  color: white;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btnVerPerfil:hover {
+  border-color: white;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card {
+    padding: 20px;
+  }
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+    font-size: 40px;
+  }
+
+  .nombre {
+    font-size: 16px;
+  }
+
+  .username {
+    font-size: 13px;
+  }
+
+  .statItem {
+    font-size: 12px;
+  }
+
+  .amigosLista {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .avatar {
+    width: 70px;
+    height: 70px;
+    font-size: 36px;
+  }
+
+  .btnSeguir,
+  .btnVerPerfil {
+    font-size: 12px;
+    padding: 10px 16px;
+  }
+}

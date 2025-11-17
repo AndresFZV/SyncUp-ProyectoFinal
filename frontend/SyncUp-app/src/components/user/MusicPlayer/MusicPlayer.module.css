@@ -1,0 +1,424 @@
+.musicPlayer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 90px;
+  background: linear-gradient(to right, #1a1a1a, #2a2a2a);
+  border-top: 1px solid #282828;
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  align-items: center;
+  padding: 0 16px;
+  gap: 16px;
+  z-index: 999;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   INFORMACIÓN DE LA CANCIÓN
+   ============================================ */
+
+.songInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.songInfoWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;       /* ← controla la distancia del botón */
+}
+
+.songInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.addFavorites {
+  background: none;
+  border: none;
+  color: #a435f0;;
+  cursor: pointer;
+  font-size: 20px;
+  transition: transform 0.2s ease;
+}
+
+.addFavorites:hover {
+  transform: scale(1.15);
+  color: #a435f0;;
+}
+
+
+.albumCover {
+  width: 56px;
+  height: 56px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.songDetails {
+  min-width: 0;
+  flex: 1;
+}
+
+.songDetails h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.songDetails p {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: #b3b3b3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================
+   CONTROLES DE REPRODUCCIÓN
+   ============================================ */
+
+.playerControls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 722px;
+  width: 100%;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sideButton,
+.fullSButton,
+.queueButton,
+.controlButton,
+.playPauseButton {
+  background: none;
+  border: none;
+  color: #b3b3b3;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.fullSButton:hover:not(:disabled),
+.quueuButton:hover:not(:disabled),
+.controlButton:hover:not(:disabled) {
+  color: white;
+}
+
+.queueButton:disabled,
+.controlButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.playPauseButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: white;
+  color: black;
+  font-size: 14px;
+}
+
+.playPauseButton:hover {
+  transform: scale(1.06);
+  background: #f0f0f0;
+}
+
+/* ============================================
+   BARRA DE PROGRESO
+   ============================================ */
+
+.progressContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.time {
+  font-size: 12px;
+  color: #b3b3b3;
+  min-width: 40px;
+  text-align: center;
+}
+
+.progressBar {
+  flex: 1;
+  height: 4px;
+  background: #4d4d4d;
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+  transition: height 0.2s;
+}
+
+.progressBar:hover {
+  height: 6px;
+}
+
+.progressBar:hover .progressDot {
+  opacity: 1;
+}
+
+.progressFill {
+  height: 100%;
+  background: #a435f0;
+  border-radius: 2px;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.progressBar:hover .progressFill {
+  background: #8a2be2;
+}
+
+.progressDot {
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+/* ============================================
+   CONTROL DE VOLUMEN
+   ============================================ */
+
+.volumeControl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.volumeIcon {
+  color: #b3b3b3;
+  font-size: 16px;
+}
+
+/* === SLIDER DINÁMICO === */
+.volumeSlider {
+  width: 90px;
+  height: 4px;
+  appearance: none;
+  cursor: pointer;
+  border-radius: 2px;
+  position: relative;
+
+  background:
+    linear-gradient(#8a2be2, #8a2be2) 0 / var(--fill) 100% no-repeat,
+    #777;
+}
+
+/* Chrome/Edge/Safari */
+.volumeSlider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: transparent;
+}
+
+.volumeSlider::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  margin-top: -4px;
+  cursor: pointer;
+  position: relative;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.volumeSlider:hover::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+/* === TOOLTIP === */
+.volumeSlider:hover::before {
+  content: var(--tooltip);
+  position: absolute;
+  top: -30px;
+  left: calc(var(--fill));
+  transform: translateX(-50%);
+  background: transparent;
+  color: white;
+  padding: 4px 6px;
+  font-size: 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 1;
+  pointer-events: none;
+}
+
+/* Animación suave */
+.volumeSlider::before {
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+}
+
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .musicPlayer {
+    grid-template-columns: 1fr;
+    height: auto;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .volumeControl {
+    display: none;
+  }
+
+  .songInfo {
+    justify-content: flex-start;
+  }
+
+  .playerControls {
+    max-width: 100%;
+  }
+}
+
+/* Agregar al final del archivo */
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Agregar al final del archivo */
+
+.controlButton.active {
+  color: #a435f0;
+}
+
+.controlButton.active:hover {
+  color: #8a2be2;
+}
+
+.repeatOne {
+  position: absolute;
+  font-size: 8px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+}
+
+.controlButton {
+  position: relative;
+}
+
+/* ============================================
+   ESTADO VACÍO (sin canción)
+   ============================================ */
+
+.emptyPlayer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6a6a6a;
+  font-size: 13px;
+  grid-column: 1 / -1;
+}
+
+/* ============================================
+   ELEMENTOS CLICKABLES
+   ============================================ */
+
+.clickable {
+  cursor: pointer;
+  transition: text-decoration 0.2s ease;
+}
+
+.clickable:hover {
+  text-decoration: underline;
+}
+
+/* Cambiar cursor del songInfo cuando es clickable */
+.songInfo {
+  cursor: pointer;
+}
+
+/* ============================================
+   BOTÓN DE FAVORITO ACTUALIZADO
+   ============================================ */
+
+.addFavorites {
+  background: none;
+  border: none;
+  color: #b3b3b3;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.2s ease;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addFavorites:hover:not(:disabled) {
+  transform: scale(1.15);
+  color: white;
+}
+
+.addFavorites.isFavorite {
+  color: #a435f0;
+}
+
+.addFavorites.isFavorite:hover {
+  color: #8a2be2;
+}
+
+.addFavorites:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Agregar al final del archivo */
+
+.queueButton.active {
+  color: #a435f0;
+}
+
+.queueButton.active:hover {
+  color: #8a2be2;
+}

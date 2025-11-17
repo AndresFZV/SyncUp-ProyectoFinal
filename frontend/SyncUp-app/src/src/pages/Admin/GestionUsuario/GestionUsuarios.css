@@ -1,0 +1,97 @@
+/* Importar estilos comunes */
+@import '../GestionComun.css';
+
+/* Estilos específicos de Gestión Usuarios */
+
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.sortable:hover {
+  background-color: rgba(138, 43, 226, 0.1);
+}
+
+.th-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sort-icon-container {
+  display: flex;
+  align-items: center;
+  min-width: 16px;
+}
+
+.sort-icon {
+  font-size: 14px;
+  opacity: 0.3;
+  transition: opacity 0.2s;
+}
+
+.sortable:hover .sort-icon {
+  opacity: 0.6;
+}
+
+.sort-icon.active {
+  opacity: 1;
+  color: #8a2be2;
+}
+
+.data-table th {
+  white-space: nowrap;
+}
+
+.stats {
+  display: flex;
+  gap: 10px;
+}
+
+.stat-badge {
+  background: linear-gradient(135deg, #8a2be2, #6a1bb2);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Ajustes para encabezado morado */
+.data-table thead th {
+  color: white;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.sortable:hover {
+  background-color: rgba(255, 255, 255, 0.1);  /* ← Hover más claro para fondo morado */
+}
+
+.sort-icon {
+  font-size: 14px;
+  opacity: 0.7;  /* ← Más visible en fondo morado */
+  transition: opacity 0.2s;
+  color: white;
+}
+
+.sortable:hover .sort-icon {
+  opacity: 1;
+}
+
+.sort-icon.active {
+  opacity: 1;
+  color: white;  /* ← Blanco cuando está activo */
+}

@@ -1,0 +1,548 @@
+/* ============================================
+   PÁGINA DE ÁLBUM
+   ============================================ */
+
+.albumPage {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #a435f0 0%, #121212 400px);
+  padding-bottom: 120px;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+
+.header {
+  padding: 80px 32px 24px;
+  background: linear-gradient(180deg, #a435f0 0%, rgba(0,0,0,0) 100%);
+}
+
+.headerContent {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+}
+
+.albumCover {
+  width: 232px;
+  height: 232px;
+  flex-shrink: 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.albumCover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.albumInfo {
+  flex: 1;
+  color: white;
+  min-width: 0;
+}
+
+.albumType {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.albumTitle {
+  font-size: 96px;
+  font-weight: 900;
+  margin: 0 0 24px 0;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  word-break: break-word;
+  color: white;
+}
+
+.albumMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  flex-wrap: wrap;
+}
+
+.artistImage {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.artistName {
+  font-weight: 700;
+  cursor: pointer;
+  transition: text-decoration 0.2s;
+}
+
+.artistName:hover {
+  text-decoration: underline;
+  color: #fff;
+}
+
+.dot {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ============================================
+   CONTROLES
+   ============================================ */
+
+.controls {
+  padding: 24px 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.playButton {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #a435f0;
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 20px;
+}
+
+.playButton:hover {
+  transform: scale(1.05);
+  background: #8a2be2;
+}
+
+.playButton:disabled {
+  background: #535353;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Botón de favorito del álbum */
+.favoriteButton {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: none;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+
+}
+
+.favoriteButton:hover {
+  border-color: #a435f0;
+  color: #a435f0;
+  transform: scale(1.05);
+}
+
+.favoriteButton.isFavorite {
+  border-color: #a435f0;
+  color: #a435f0;
+}
+
+.favoriteButton.isFavorite svg {
+  fill: #a435f0;
+}
+
+.favoriteButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+.moreButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: #b3b3b3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 24px;
+}
+
+.moreButton:hover {
+  color: white;
+}
+
+/* ============================================
+   LISTA DE CANCIONES
+   ============================================ */
+
+.songsSection {
+  padding: 0 32px;
+}
+
+.songsHeader {
+  display: grid;
+  grid-template-columns: 40px 1fr 60px 80px;
+  gap: 16px;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #b3b3b3;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+.headerNumber {
+  text-align: center;
+}
+
+.headerTitle {
+  /* empty */
+}
+
+.headerLike {
+  text-align: center;
+}
+
+.headerDuration {
+  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin-bottom: 16px;
+}
+
+.songsList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.songRow {
+  display: grid;
+  grid-template-columns: 40px 1fr 60px 80px;
+  gap: 16px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+  align-items: center;
+}
+
+.songRow:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.songRow.playing {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.songRow.playing .songNumber span,
+.songRow.playing .songDetails h4 {
+  color: #a435f0;
+}
+
+/* Número / Indicador */
+.songNumber {
+  text-align: center;
+  color: #b3b3b3;
+  font-size: 16px;
+  min-width: 40px;
+}
+
+.playingIndicator {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+  justify-content: center;
+}
+
+.playingIndicator span {
+  width: 3px;
+  background: #a435f0;
+  border-radius: 3px;
+  animation: soundWave 1.2s ease-in-out infinite;
+}
+
+.playingIndicator span:nth-child(1) {
+  height: 6px;
+  animation-delay: 0s;
+}
+
+.playingIndicator span:nth-child(2) {
+  height: 12px;
+  animation-delay: 0.2s;
+}
+
+.playingIndicator span:nth-child(3) {
+  height: 9px;
+  animation-delay: 0.4s;
+}
+
+.playingIndicator span:nth-child(4) {
+  height: 14px;
+  animation-delay: 0.6s;
+}
+
+@keyframes soundWave {
+  0%, 100% {
+    transform: scaleY(0.5);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* Info de la canción */
+.songInfo {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.songDetails {
+  min-width: 0;
+  flex: 1;
+}
+
+.songDetails h4 {
+  margin: 0 0 4px 0;
+  color: white;
+  font-size: 16px;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.songDetails p {
+  margin: 0;
+  color: #b3b3b3;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.songRow:hover .songDetails h4 {
+  color: white;
+}
+
+/* Botón de like de canción */
+.songLike {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.songRow:hover .songLike {
+  opacity: 1;
+}
+
+.songRow.playing .songLike {
+  opacity: 1;
+}
+
+.likeButton {
+  background: transparent;
+  border: none;
+  color: #b3b3b3;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 16px;
+}
+
+.likeButton:hover {
+  color: white;
+  transform: scale(1.1);
+}
+
+.likeButton.liked {
+  color: #a435f0;
+}
+
+.likeButton.liked:hover {
+  color: #8a2be2;
+}
+
+/* Hacer visible el botón de like si la canción es favorita */
+.songRow .likeButton.liked {
+  opacity: 1;
+}
+
+.songRow .songLike:has(.likeButton.liked) {
+  opacity: 1;
+}
+
+/* Duración */
+.songDuration {
+  color: #b3b3b3;
+  font-size: 14px;
+  text-align: right;
+}
+
+/* ============================================
+   FOOTER DEL ÁLBUM
+   ============================================ */
+
+.albumFooter {
+  padding: 32px 32px 0;
+  color: #b3b3b3;
+  font-size: 14px;
+}
+
+.releaseDate {
+  margin: 0 0 8px 0;
+}
+
+.description {
+  margin: 8px 0;
+}
+
+/* ============================================
+   ESTADOS
+   ============================================ */
+
+.loadingContainer,
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: white;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #a435f0;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.retryButton {
+  padding: 12px 32px;
+  background: #a435f0;
+  color: white;
+  border: none;
+  border-radius: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 16px;
+}
+
+.retryButton:hover {
+  background: #8a2be2;
+  transform: scale(1.04);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: #b3b3b3;
+  text-align: center;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .albumTitle {
+    font-size: 72px;
+  }
+
+  .albumCover {
+    width: 192px;
+    height: 192px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 60px 24px 24px;
+  }
+
+  .headerContent {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .albumTitle {
+    font-size: 48px;
+  }
+
+  .albumCover {
+    width: 160px;
+    height: 160px;
+  }
+
+  .albumMeta {
+    justify-content: center;
+  }
+
+  .songsSection {
+    padding: 0 16px;
+  }
+
+  .controls {
+    padding: 24px 16px;
+  }
+
+  .songsHeader,
+  .songRow {
+    grid-template-columns: 40px 1fr 40px 60px;
+    gap: 8px;
+  }
+
+  .songLike {
+    opacity: 1;
+  }
+
+  .likeButton {
+    font-size: 14px;
+  }
+}

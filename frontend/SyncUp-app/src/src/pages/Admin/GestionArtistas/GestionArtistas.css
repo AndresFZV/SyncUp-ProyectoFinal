@@ -1,0 +1,374 @@
+/* Importar estilos comunes */
+@import '../GestionComun.css';
+
+/* Estilos específicos de Gestión Artistas */
+
+.artistas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
+  margin-top: 20px;
+}
+
+.artista-card {
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.artista-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.artista-image {
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.artista-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: rgba(0, 0, 0, 0.2);
+}
+
+.artista-info {
+  padding: 20px;
+}
+
+.artista-info h3 {
+  margin: 0 0 10px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.artista-pais {
+  margin: 0 0 5px 0;
+  font-size: 14px;
+  color: #666;
+  font-weight: 600;
+}
+
+.artista-genero {
+  display: inline-block;
+  margin: 0 0 12px 0;
+  padding: 5px 12px;
+  background: #e8f4f8;
+  color: #2196f3;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.artista-bio {
+  margin: 0 0 15px 0;
+  font-size: 13px;
+  color: #555;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.artista-stats {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.artista-stats span {
+  font-size: 13px;
+  color: #666;
+}
+
+.artista-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-artista {
+  max-width: 600px;
+}
+
+.modal-detalles-artista {
+  max-width: 1100px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.btn-close-modal {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: background 0.3s;
+}
+
+.btn-close-modal:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.detalles-header {
+  display: flex;
+  gap: 30px;
+  padding: 30px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.detalles-imagen {
+  flex-shrink: 0;
+}
+
+.detalles-imagen img {
+  width: 200px;
+  height: 200px;
+  border-radius: 15px;
+  object-fit: cover;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.detalles-info h1 {
+  color: white;
+  margin: 0 0 10px 0;
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.detalles-pais {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+.detalles-genero {
+  display: inline-block;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.detalles-biografia {
+  margin: 15px 0;
+  font-size: 15px;
+  line-height: 1.6;
+  opacity: 0.95;
+}
+
+.detalles-stats {
+  display: flex;
+  gap: 25px;
+  margin-top: 20px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.detalles-contenido {
+  padding: 30px;
+}
+
+.seccion-albumes,
+.seccion-canciones {
+  margin-bottom: 40px;
+}
+
+.seccion-albumes h2,
+.seccion-canciones h2 {
+  margin: 0 0 20px 0;
+  font-size: 24px;
+  color: #1a1a2e;
+}
+
+.albumes-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.album-item {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.album-item img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.album-item-info {
+  padding: 15px;
+}
+
+.album-item-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #1a1a2e;
+}
+
+.album-item-info p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ============================================
+   SECCIÓN CANCIONES
+   ============================================ */
+
+.canciones-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cancion-item {
+  display: grid;
+  grid-template-columns: 50px 80px minmax(150px, 1fr) minmax(400px, 2fr);
+  gap: 20px;
+  align-items: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.cancion-item:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  background: #f0f0f0;
+}
+
+.cancion-numero {
+  font-size: 20px;
+  font-weight: 700;
+  color: #999;
+  text-align: center;
+}
+
+.cancion-img {
+  width: 80px;
+  height: 70px;
+  border-radius: 10px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cancion-info {
+  min-width: 0;
+}
+
+.cancion-info h4 {
+  margin: 0 0 5px 0;
+  font-size: 18px;
+  color: #1a1a2e;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cancion-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #999;
+}
+
+.cancion-audio {
+  width: 100%;
+  min-width: 400px;
+  height: 40px;
+  justify-self: end;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  font-size: 15px;
+}
+
+.image-preview {
+  margin-top: 15px;
+  width: 200px;
+  height: 200px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid #e0e0e0;
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .artistas-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+
+  .detalles-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .albumes-lista {
+    grid-template-columns: 1fr;
+  }
+
+  .cancion-item {
+    grid-template-columns: 40px 60px 1fr;
+    gap: 12px;
+  }
+
+  .cancion-audio {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+  }
+}

@@ -1,0 +1,114 @@
+.section {
+  margin-bottom: 40px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+}
+
+.showAllButton {
+  background: transparent;
+  border: none;
+  color: #b3b3b3;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.showAllButton:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.carouselContainer {
+  position: relative;
+}
+
+.carousel {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(180px, 1fr);
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 4px;
+}
+
+.carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.carouselContainer:hover .scrollButton {
+  opacity: 1;
+}
+
+.scrollButton:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.scrollButton.left {
+  left: -20px;
+}
+
+.scrollButton.right {
+  right: -20px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .carousel {
+    grid-auto-columns: minmax(160px, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel {
+    grid-auto-columns: minmax(140px, 1fr);
+    gap: 12px;
+  }
+
+  .header h2 {
+    font-size: 20px;
+  }
+
+  .scrollButton {
+    display: none;
+  }
+}
