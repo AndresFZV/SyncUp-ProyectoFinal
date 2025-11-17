@@ -120,4 +120,21 @@ public class CancionController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
+    /**
+     * Obtener canciones similares (mismo género)
+     * GET /api/canciones/{cancionId}/similares
+     */
+    @GetMapping("/{cancionId}/similares")
+    public ResponseEntity<?> obtenerCancionesSimilares(
+            @PathVariable String cancionId,
+            @RequestParam(defaultValue = "20") int limite) {
+        try {
+            List<CancionDTO> similares = cancionService.obtenerCancionesSimilares(cancionId, limite);
+            return ResponseEntity.ok(similares);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
 }

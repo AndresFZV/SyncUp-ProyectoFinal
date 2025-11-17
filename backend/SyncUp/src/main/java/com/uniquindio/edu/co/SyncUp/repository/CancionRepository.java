@@ -21,4 +21,8 @@ public interface CancionRepository extends MongoRepository<Cancion, String> {
      */
     @Query("{ 'artista.$id': { $oid: ?0 } }")
     List<Cancion> findByArtistaId(String artistaId);
+
+    List<Cancion> findByGenero(String genero);
+
+
 }

@@ -4,14 +4,23 @@ import com.uniquindio.edu.co.SyncUp.document.Artista;
 import com.uniquindio.edu.co.SyncUp.document.Cancion;
 import com.uniquindio.edu.co.SyncUp.document.Usuario;
 import com.uniquindio.edu.co.SyncUp.services.AdminService;
+import com.uniquindio.edu.co.SyncUp.services.GrafoSocialService;
 import com.uniquindio.edu.co.SyncUp.services.UsuarioService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -21,6 +30,9 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
     private final AdminService adminService;
+
+    @Autowired
+    private GrafoSocialService grafoSocialService;
 
     @PostMapping("/registro")
     public ResponseEntity<?> registrarUsuario(@RequestBody Usuario usuario) {
@@ -97,6 +109,10 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.seguirUsuario(username, aSeguir));
     }
 
+    /**
+     * Seguir a un usuario por username
+     * ACTUALIZADO: Incluye actualización del grafo
+     */
     @PostMapping("/{username}/seguir/{usernameASeguir}")
     public ResponseEntity<?> seguirUsuarioPorUsername(
             @PathVariable String username,
@@ -104,6 +120,13 @@ public class UsuarioController {
         try {
             Usuario usuarioASeguir = usuarioService.buscarIdentificador(usernameASeguir);
             usuarioService.seguirUsuario(username, usuarioASeguir);
+
+            // Actualizar grafo social
+            try {
+                grafoSocialService.actualizarSeguimiento(username, usernameASeguir);
+            } catch (Exception e) {
+                System.err.println("⚠️ No se pudo actualizar grafo: " + e.getMessage());
+            }
 
             Map<String, String> respuesta = new HashMap<>();
             respuesta.put("mensaje", "Ahora sigues a " + usernameASeguir);
@@ -116,6 +139,36 @@ public class UsuarioController {
     @PostMapping("/{username}/dejar-seguir")
     public ResponseEntity<?> dejarDeSeguirUsuario(@PathVariable String username, @RequestBody Usuario aDejar) {
         return ResponseEntity.ok(usuarioService.dejarDeSeguirUsuario(username, aDejar));
+    }
+
+    /**
+     * Dejar de seguir a un usuario por username
+     * ACTUALIZADO: Incluye actualización del grafo
+     */
+    @PostMapping("/{username}/dejar-seguir/{usernameADejarDeSeguir}")
+    public ResponseEntity<?> dejarDeSeguirUsuarioPorUsername(
+            @PathVariable String username,
+            @PathVariable String usernameADejarDeSeguir) {
+        try {
+            Usuario usuarioADejarDeSeguir = usuarioService.buscarIdentificador(usernameADejarDeSeguir);
+            usuarioService.dejarDeSeguirUsuario(username, usuarioADejarDeSeguir);
+
+            // Actualizar grafo social
+            try {
+                grafoSocialService.actualizarDejarDeSeguir(username, usernameADejarDeSeguir);
+            } catch (Exception e) {
+                System.err.println("⚠️ No se pudo actualizar grafo: " + e.getMessage());
+            }
+
+            Map<String, String> respuesta = new HashMap<>();
+            respuesta.put("mensaje", "Has dejado de seguir a " + usernameADejarDeSeguir);
+            return ResponseEntity.ok(respuesta);
+        } catch (RuntimeException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", true);
+            errorResponse.put("mensaje", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
     }
 
     @GetMapping
@@ -241,8 +294,8 @@ public class UsuarioController {
     }
 
     // ============================================
-// ENDPOINTS PARA PERFIL DE USUARIO
-// ============================================
+    // ENDPOINTS PARA PERFIL DE USUARIO
+    // ============================================
 
     /**
      * Obtener perfil completo del usuario
@@ -264,6 +317,7 @@ public class UsuarioController {
             estadisticas.put("siguiendo", usuario.getSiguiendo() != null ? usuario.getSiguiendo().size() : 0);
             estadisticas.put("cancionesFavoritas", usuario.getListaFavoritos() != null ? usuario.getListaFavoritos().size() : 0);
             estadisticas.put("artistasFavoritos", usuario.getArtistasFavoritos() != null ? usuario.getArtistasFavoritos().size() : 0);
+            estadisticas.put("albumesFavoritos", usuario.getAlbumesFavoritos() != null ? usuario.getAlbumesFavoritos().size() : 0);
             estadisticas.put("playlistsPublicas", 0);
 
             perfil.put("estadisticas", estadisticas);
@@ -467,5 +521,188 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Obtener álbumes favoritos del usuario
+     */
+    @GetMapping("/{username}/favoritos/albums")
+    public ResponseEntity<?> obtenerAlbumesFavoritos(@PathVariable String username) {
+        try {
+            Usuario usuario = usuarioService.buscarIdentificador(username);
 
+            List<Map<String, Object>> albumesFavoritos = new ArrayList<>();
+
+            if (usuario.getAlbumesFavoritos() != null) {
+                albumesFavoritos = usuario.getAlbumesFavoritos().stream()
+                        .filter(Objects::nonNull)
+                        .map(album -> {
+                            Map<String, Object> data = new HashMap<>();
+                            data.put("albumId", album.getId());
+                            data.put("nombre", album.getNombre());
+                            data.put("imagenUrl", album.getImagenUrl());
+                            data.put("artistaId", album.getArtistId());
+                            return data;
+                        })
+                        .collect(Collectors.toList());
+            }
+
+            return ResponseEntity.ok(albumesFavoritos);
+        } catch (RuntimeException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", true);
+            errorResponse.put("mensaje", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
+    }
+
+    /**
+     * Eliminar álbum de favoritos
+     */
+    @DeleteMapping("/{username}/favoritos/albums/{albumId}")
+    public ResponseEntity<?> eliminarAlbumFavorito(
+            @PathVariable String username,
+            @PathVariable String albumId) {
+        try {
+            usuarioService.eliminarAlbumFavorito(username, albumId);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("mensaje", "Álbum eliminado de favoritos");
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", true);
+            errorResponse.put("mensaje", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+    }
+
+    /**
+     * Verificar si el usuario actual sigue a otro usuario
+     */
+    @GetMapping("/{username}/sigue/{usernameObjetivo}")
+    public ResponseEntity<?> verificarSiSigue(
+            @PathVariable String username,
+            @PathVariable String usernameObjetivo) {
+        try {
+            Usuario usuario = usuarioService.buscarIdentificador(username);
+            Usuario usuarioObjetivo = usuarioService.buscarIdentificador(usernameObjetivo);
+
+            boolean siguiendo = false;
+            if (usuario.getSiguiendo() != null) {
+                siguiendo = usuario.getSiguiendo().stream()
+                        .anyMatch(u -> u.getUsername() != null &&
+                                u.getUsername().equals(usernameObjetivo));
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("siguiendo", siguiendo);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", true);
+            errorResponse.put("mensaje", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
+    }
+    /**
+     * RF-009: Descargar reporte completo del usuario en formato CSV
+     *
+     * GET /api/usuarios/reporte/{username}
+     */
+    @GetMapping(value = "/reporte/{username}", produces = "text/csv")
+    public ResponseEntity<byte[]> descargarReporteUsuario(@PathVariable String username) {
+        try {
+            String csv = usuarioService.generarReporteCSV(username);
+            // Convertir a bytes con UTF-8 BOM para Excel
+            byte[] csvBytes = ("\uFEFF" + csv).getBytes(StandardCharsets.UTF_8);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("text/csv; charset=UTF-8"));
+            headers.setContentDispositionFormData("attachment",
+                    "SyncUp_Reporte_" + username + "_" + LocalDate.now() + ".csv");
+            headers.setContentLength(csvBytes.length);
+            return ResponseEntity.ok()
+                    .headers(headers).body(csvBytes);
+
+        } catch (RuntimeException e) {
+            String errorCsv = "Error al generar el reporte: " + e.getMessage();
+            byte[] errorBytes = errorCsv.getBytes(StandardCharsets.UTF_8);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorBytes);
+        }
+    }
+
+    /**
+     * RF-010: Descargar reporte global del sistema (Solo Administradores)
+     * Incluye: todas las canciones, usuarios, artistas, álbumes
+     *
+     * GET /api/usuarios/reporte-global
+     */
+    @GetMapping(value = "/reporte-global", produces = "text/csv")
+    public ResponseEntity<byte[]> descargarReporteGlobal() {
+        try {
+            String csv = usuarioService.generarReporteGlobalCSV();
+            // Convertir a bytes con UTF-8 BOM para Excel
+            byte[] csvBytes = ("\uFEFF" + csv).getBytes(StandardCharsets.UTF_8);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("text/csv; charset=UTF-8"));
+            headers.setContentDispositionFormData("attachment",
+                    "SyncUp_Reporte_Global_" + LocalDate.now() + ".csv");
+            headers.setContentLength(csvBytes.length);
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(csvBytes);
+        } catch (Exception e) {
+            String errorCsv = "Error al generar el reporte global: " + e.getMessage();
+            byte[] errorBytes = errorCsv.getBytes(StandardCharsets.UTF_8);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorBytes);
+        }
+    }
+
+    /**
+     * Agregar canción a favoritas
+     * POST /api/usuarios/{username}/favoritos/canciones/{cancionId}
+     */
+    @PostMapping("/{username}/favoritos/canciones/{cancionId}")
+    public ResponseEntity<Map<String, String>> agregarCancionFavorita(
+            @PathVariable String username,
+            @PathVariable String cancionId) {
+        try {
+            usuarioService.agregarCancionFavorita(username, cancionId);
+            Map<String, String> response = new HashMap<>();
+            response.put("mensaje", "Canción agregada a favoritas");
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+
+    /**
+     * Verificar si una canción es favorita
+     * GET /api/usuarios/{username}/favoritos/canciones/{cancionId}/check
+     */
+    @GetMapping("/{username}/favoritos/canciones/{cancionId}/check")
+    public ResponseEntity<Map<String, Boolean>> verificarCancionFavorita(
+            @PathVariable String username,
+            @PathVariable String cancionId) {
+        try {
+            Usuario usuario = usuarioService.buscarIdentificador(username);
+
+            boolean esFavorita = false;
+            if (usuario.getListaFavoritos() != null) {
+                esFavorita = usuario.getListaFavoritos().stream()
+                        .anyMatch(c -> c.getSongId().equals(cancionId));
+            }
+
+            Map<String, Boolean> response = new HashMap<>();
+            response.put("esFavorita", esFavorita);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, Boolean> response = new HashMap<>();
+            response.put("esFavorita", false);
+            return ResponseEntity.ok(response);
+        }
+    }
 }

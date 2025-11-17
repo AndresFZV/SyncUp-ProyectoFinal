@@ -361,13 +361,6 @@ public class CancionService {
                 .collect(Collectors.toList());
     }
 
-    // Obtener canciones por artista
-    public List<CancionDTO> obtenerCancionesPorArtista(String artistaId) {
-        List<Cancion> canciones = cancionRepository.findByArtistaId(artistaId);
-        return canciones.stream()
-                .map(this::convertirADTO)
-                .collect(Collectors.toList());
-    }
 
     private CancionDTO convertirADTO(Cancion cancion) {
         CancionDTO.CancionDTOBuilder builder = CancionDTO.builder()
@@ -393,5 +386,78 @@ public class CancionService {
 
         return builder.build();
     }
+
+    /**
+     * Obtener canciones similares (mismo género)
+     */
+    public List<CancionDTO> obtenerCancionesSimilares(String cancionId, int limite) {
+        // Obtener la canción base
+        Cancion cancionBase = cancionRepository.findById(cancionId)
+                .orElseThrow(() -> new RuntimeException("Canción no encontrada"));
+
+        String genero = cancionBase.getGenero();
+
+        // Buscar canciones del mismo género
+        List<Cancion> todasDelGenero = cancionRepository.findByGenero(genero);
+
+        // Filtrar la canción actual y mezclar
+        List<Cancion> similares = todasDelGenero.stream()
+                .filter(c -> !c.getSongId().equals(cancionId))
+                .collect(Collectors.toList());
+
+        Collections.shuffle(similares);
+
+        // Limitar resultados
+        similares = similares.stream()
+                .limit(limite)
+                .collect(Collectors.toList());
+
+        // Convertir a DTO
+        return similares.stream()
+                .map(this::convertirCancionADTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Convertir Cancion a CancionDTO
+     * Método unificado para evitar duplicación
+     */
+    private CancionDTO convertirCancionADTO(Cancion cancion) {
+        CancionDTO.CancionDTOBuilder builder = CancionDTO.builder()
+                .songId(cancion.getSongId())
+                .titulo(cancion.getTitulo())
+                .genero(cancion.getGenero())
+                .anio(cancion.getAnio())
+                .duracion(cancion.getDuracion())
+                .imagenUrl(cancion.getImagenUrl())
+                .musica(cancion.getMusica());
+
+        // Información del artista desde @DBRef
+        if (cancion.getArtista() != null) {
+            builder.artistaId(cancion.getArtista().getArtistId());
+            builder.artistaNombre(cancion.getArtista().getNombre());
+        }
+
+        // Información del álbum desde @DBRef
+        if (cancion.getAlbum() != null) {
+            builder.albumId(cancion.getAlbum().getId());
+            builder.albumNombre(cancion.getAlbum().getNombre());
+        }
+
+        return builder.build();
+    }
+
+
+    /**
+     * Obtener canciones por artista
+     */
+    public List<CancionDTO> obtenerCancionesPorArtista(String artistaId) {
+        List<Cancion> canciones = cancionRepository.findByArtistaId(artistaId);
+        return canciones.stream()
+                .map(this::convertirCancionADTO)
+                .collect(Collectors.toList());
+    }
+
+
 
 }
