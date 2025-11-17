@@ -21,7 +21,6 @@ SyncUp es una plataforma de streaming y descubrimiento social de música desarro
 ## Tecnologías
 ### Backend
 - Spring Boot 3.x
-- Spring Security + JWT
 - Spring Data MongoDB
 - MongoDB
 - Maven
@@ -33,6 +32,7 @@ SyncUp es una plataforma de streaming y descubrimiento social de música desarro
 - Axios
 - Context API
 - Chart.js
+- Vis Network
 
 ## Estructura del Proyecto
 ```
