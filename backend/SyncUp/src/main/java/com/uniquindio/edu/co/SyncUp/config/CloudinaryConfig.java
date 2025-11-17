@@ -6,6 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configuración para la integración con Cloudinary.
+ * Proporciona la configuración necesaria para el servicio de almacenamiento en la nube.
+ */
 @Configuration
 public class CloudinaryConfig {
 
@@ -18,6 +22,11 @@ public class CloudinaryConfig {
     @Value("${cloudinary.api-secret}")
     private String apiSecret;
 
+    /**
+     * Configura y crea el bean de Cloudinary con las credenciales proporcionadas.
+     *
+     * @return Instancia configurada de Cloudinary
+     */
     @Bean
     public Cloudinary cloudinary(){
         return new Cloudinary(ObjectUtils.asMap("cloud_name", cloudName, "api_key", apiKey, "api_secret", apiSecret));
