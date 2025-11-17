@@ -6,8 +6,11 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 
 /**
- * RF-025: Implementación de Árbol de Prefijos (Trie)
- * RF-026: Devolver todas las palabras que comiencen con un prefijo dado
+ * Implementación de un árbol de prefijos (Trie) para funcionalidades de autocompletado.
+ * Proporciona inserción y búsqueda eficiente de palabras con soporte para múltiples tipos de entidades.
+ *
+ * @author SyncUp Team
+ * @version 1.0
  */
 @Component
 @Getter
@@ -16,17 +19,20 @@ public class TrieAutocompletado {
     private final TrieNode raiz;
     private int totalPalabras;
 
+    /**
+     * Constructor que inicializa el Trie con un nodo raíz vacío.
+     */
     public TrieAutocompletado() {
         this.raiz = new TrieNode();
         this.totalPalabras = 0;
     }
 
     /**
-     * RF-025: Insertar una palabra en el Trie
+     * Inserta una palabra en el Trie asociada a una entidad específica.
      *
-     * @param palabra Palabra a insertar (se normaliza a minúsculas)
-     * @param entidadId ID de la entidad asociada
-     * @param tipo Tipo: "cancion", "artista", "album"
+     * @param palabra La palabra a insertar (se normaliza a minúsculas)
+     * @param entidadId El ID de la entidad asociada
+     * @param tipo El tipo de entidad: "cancion", "artista", "album", "usuario"
      */
     public void insertar(String palabra, String entidadId, String tipo) {
         if (palabra == null || palabra.trim().isEmpty()) {
@@ -52,49 +58,44 @@ public class TrieAutocompletado {
     }
 
     /**
-     * Insertar múltiples palabras de un texto
-     */
-    /**
-     * Insertar múltiples palabras de un texto
+     * Inserta múltiples palabras de un texto, incluyendo variaciones sin espacios y el texto completo.
+     *
+     * @param texto El texto a procesar e insertar
+     * @param entidadId El ID de la entidad asociada
+     * @param tipo El tipo de entidad: "cancion", "artista", "album", "usuario"
      */
     public void insertarTexto(String texto, String entidadId, String tipo) {
         if (texto == null || texto.trim().isEmpty()) {
             return;
         }
 
-        // Normalizar el texto completo
         String textoNormalizado = normalizar(texto);
 
-        System.out.println("📝 [TRIE] Insertando: '" + texto + "' → '" + textoNormalizado + "' (Tipo: " + tipo + ", ID: " + entidadId + ")");
-
-        // 1. Insertar cada palabra individual
+        // Insertar cada palabra individual
         String[] palabras = textoNormalizado.split("\\s+");
         for (String palabra : palabras) {
             if (palabra.length() >= 2) {
-                System.out.println("   └─ Palabra: '" + palabra + "'");
                 insertar(palabra, entidadId, tipo);
             }
         }
 
-        // 2. Insertar el texto completo SIN ESPACIOS (para usernames)
+        // Insertar el texto completo SIN ESPACIOS (para usernames)
         String textoSinEspacios = textoNormalizado.replaceAll("\\s+", "");
         if (textoSinEspacios.length() >= 2) {
-            System.out.println("   └─ Texto sin espacios: '" + textoSinEspacios + "'");
             insertar(textoSinEspacios, entidadId, tipo);
         }
 
-        // 3. Insertar el texto completo CON ESPACIOS (para nombres completos)
+        // Insertar el texto completo CON ESPACIOS (para nombres completos)
         if (textoNormalizado.contains(" ") && textoNormalizado.length() >= 2) {
-            System.out.println("   └─ Texto completo: '" + textoNormalizado + "'");
             insertar(textoNormalizado, entidadId, tipo);
         }
     }
 
     /**
-     * RF-026: Buscar todas las palabras que comienzan con un prefijo
+     * Busca todas las palabras que comienzan con un prefijo dado.
      *
-     * @param prefijo Prefijo a buscar
-     * @return Lista de palabras que coinciden
+     * @param prefijo El prefijo a buscar
+     * @return Lista de palabras que coinciden con el prefijo
      */
     public List<String> buscarPorPrefijo(String prefijo) {
         if (prefijo == null || prefijo.trim().isEmpty()) {
@@ -115,10 +116,10 @@ public class TrieAutocompletado {
     }
 
     /**
-     * Buscar entidades asociadas a un prefijo
+     * Busca entidades asociadas a un prefijo dado.
      *
-     * @param prefijo Prefijo a buscar
-     * @return Mapa con tipo de entidad y IDs asociados
+     * @param prefijo El prefijo a buscar
+     * @return Mapa con tipos de entidad y conjuntos de IDs asociados
      */
     public Map<String, Set<String>> buscarEntidadesPorPrefijo(String prefijo) {
         if (prefijo == null || prefijo.trim().isEmpty()) {
@@ -144,7 +145,10 @@ public class TrieAutocompletado {
     }
 
     /**
-     * Buscar el nodo correspondiente a un prefijo
+     * Busca el nodo correspondiente a un prefijo dado.
+     *
+     * @param prefijo El prefijo a buscar
+     * @return El nodo correspondiente al prefijo, o null si no existe
      */
     private TrieNode buscarNodo(String prefijo) {
         TrieNode actual = raiz;
@@ -160,7 +164,12 @@ public class TrieAutocompletado {
     }
 
     /**
-     * Recolectar recursivamente todas las palabras desde un nodo
+     * Recolecta recursivamente todas las palabras desde un nodo dado.
+     *
+     * @param nodo El nodo desde donde comenzar la búsqueda
+     * @param prefijo El prefijo actual
+     * @param resultados La lista donde almacenar los resultados
+     * @param limite El número máximo de resultados a recolectar
      */
     private void recolectarPalabras(TrieNode nodo, String prefijo, List<String> resultados, int limite) {
         if (nodo == null || resultados.size() >= limite) {
@@ -185,7 +194,11 @@ public class TrieAutocompletado {
     }
 
     /**
-     * Recolectar recursivamente todas las entidades desde un nodo
+     * Recolecta recursivamente todas las entidades desde un nodo dado.
+     *
+     * @param nodo El nodo desde donde comenzar la búsqueda
+     * @param resultado El mapa donde almacenar las entidades encontradas
+     * @param limite El número máximo de entidades a recolectar
      */
     private void recolectarEntidades(TrieNode nodo, Map<String, Set<String>> resultado, int limite) {
         if (nodo == null) {
@@ -201,13 +214,11 @@ public class TrieAutocompletado {
             return;
         }
 
-        // ✅ AHORA SÍ FUNCIONA: Obtener IDs por tipo del nodo
         resultado.get("canciones").addAll(nodo.getCancionIds());
         resultado.get("artistas").addAll(nodo.getArtistaIds());
         resultado.get("albums").addAll(nodo.getAlbumIds());
         resultado.get("usuarios").addAll(nodo.getUsuarioIds());
 
-        // Recorrer recursivamente los hijos
         for (TrieNode hijo : nodo.getHijos().values()) {
             recolectarEntidades(hijo, resultado, limite);
 
@@ -221,21 +232,20 @@ public class TrieAutocompletado {
             }
         }
     }
+
     /**
-     * Normalizar texto: minúsculas, sin acentos, sin caracteres especiales
-     */
-    /**
-     * Normalizar texto: minúsculas, sin acentos, sin caracteres especiales
+     * Normaliza un texto convirtiéndolo a minúsculas, eliminando acentos y caracteres especiales.
+     *
+     * @param texto El texto a normalizar
+     * @return El texto normalizado
      */
     private String normalizar(String texto) {
         if (texto == null || texto.trim().isEmpty()) {
             return "";
         }
 
-        // 1. Convertir a minúsculas PRIMERO
         String resultado = texto.toLowerCase();
 
-        // 2. Reemplazar acentos
         resultado = resultado
                 .replaceAll("[áàäâ]", "a")
                 .replaceAll("[éèëê]", "e")
@@ -244,19 +254,17 @@ public class TrieAutocompletado {
                 .replaceAll("[úùüû]", "u")
                 .replaceAll("ñ", "n");
 
-        // 3. Mantener solo letras, números y espacios
         resultado = resultado.replaceAll("[^a-z0-9\\s]", "");
-
-        // 4. Eliminar espacios múltiples
         resultado = resultado.replaceAll("\\s+", " ").trim();
-
-        System.out.println("🔄 Normalización: '" + texto + "' → '" + resultado + "'");
 
         return resultado;
     }
 
     /**
-     * Verificar si una palabra existe en el Trie
+     * Verifica si una palabra existe en el Trie.
+     *
+     * @param palabra La palabra a verificar
+     * @return true si la palabra existe, false en caso contrario
      */
     public boolean existe(String palabra) {
         if (palabra == null || palabra.trim().isEmpty()) {
@@ -270,7 +278,9 @@ public class TrieAutocompletado {
     }
 
     /**
-     * Obtener estadísticas del Trie
+     * Obtiene estadísticas del Trie.
+     *
+     * @return Mapa con estadísticas del Trie
      */
     public Map<String, Object> obtenerEstadisticas() {
         return Map.of(
@@ -280,6 +290,13 @@ public class TrieAutocompletado {
         );
     }
 
+    /**
+     * Calcula la profundidad máxima del Trie.
+     *
+     * @param nodo El nodo actual
+     * @param profundidadActual La profundidad actual
+     * @return La profundidad máxima del Trie
+     */
     private int calcularProfundidadMaxima(TrieNode nodo, int profundidadActual) {
         if (!nodo.tieneHijos()) {
             return profundidadActual;
@@ -294,6 +311,12 @@ public class TrieAutocompletado {
         return maxProfundidad;
     }
 
+    /**
+     * Cuenta el número total de nodos en el Trie.
+     *
+     * @param nodo El nodo actual
+     * @return El número total de nodos
+     */
     private int contarNodos(TrieNode nodo) {
         if (nodo == null) return 0;
 
@@ -306,7 +329,7 @@ public class TrieAutocompletado {
     }
 
     /**
-     * Limpiar el Trie
+     * Limpia completamente el Trie, eliminando todas las palabras y entidades.
      */
     public void limpiar() {
         raiz.getHijos().clear();
