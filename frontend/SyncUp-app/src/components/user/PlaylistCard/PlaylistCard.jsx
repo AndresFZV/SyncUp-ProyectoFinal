@@ -2,7 +2,21 @@ import React from 'react';
 import { FaPlay } from 'react-icons/fa';
 import styles from './PlaylistCard.module.css';
 
+/**
+ * Componente de tarjeta para mostrar información de una playlist
+ * Permite reproducir la playlist al hacer clic en la tarjeta
+ * 
+ * @param {Object} playlist - Objeto con la información de la playlist
+ * @param {string} playlist.nombre - Nombre de la playlist
+ * @param {string} playlist.descripcion - Descripción de la playlist
+ * @param {string} playlist.imagenUrl - URL de la imagen de la playlist
+ * @param {Array} playlist.canciones - Lista de canciones de la playlist
+ * @param {function} onPlay - Función callback que se ejecuta al reproducir la playlist
+ */
 const PlaylistCard = ({ playlist, onPlay }) => {
+  /**
+   * Maneja el clic en la playlist para iniciar la reproducción
+   */
   const handleClick = () => {
     if (onPlay && playlist.canciones) {
       onPlay(playlist.canciones);

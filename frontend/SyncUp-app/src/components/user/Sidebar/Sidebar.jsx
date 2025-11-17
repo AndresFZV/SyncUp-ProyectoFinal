@@ -13,6 +13,11 @@ import styles from './Sidebar.module.css';
 import { useSidebar } from '../../../contexts/SidebarContext';
 import { getArtistasFavoritos, getAlbumesFavoritos } from '../../../services/favoritosService';
 
+/**
+ * Componente de barra lateral que muestra navegación, biblioteca del usuario
+ * y contenido favorito (artistas, álbumes, playlists)
+ * Soporta modo expandido y colapsado con funcionalidades de búsqueda y filtrado
+ */
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,13 +29,14 @@ const Sidebar = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const username = localStorage.getItem('userName');
 
-  // Función para cargar datos
+  /**
+   * Carga los datos del sidebar (artistas favoritos, álbumes favoritos y playlists)
+   */
   const cargarDatos = async () => {
     try {
       try {
         const artistas = await getArtistasFavoritos(username);
         setArtistasFavoritos(artistas || []);
-        console.log('✅ Artistas favoritos cargados:', artistas);
       } catch (error) {
         console.error('Error al cargar artistas:', error);
         setArtistasFavoritos([]);
@@ -39,7 +45,6 @@ const Sidebar = () => {
       try {
         const albumes = await getAlbumesFavoritos(username);
         setAlbumesFavoritos(albumes || []);
-        console.log('✅ Álbumes favoritos cargados:', albumes);
       } catch (error) {
         console.error('Error al cargar álbumes:', error);
         setAlbumesFavoritos([]);
@@ -62,28 +67,35 @@ const Sidebar = () => {
     }
   }, [username]);
 
-  // ← NUEVO: Escuchar eventos de actualización de favoritos
+  /**
+   * Escucha eventos de actualización de favoritos para recargar datos
+   */
   useEffect(() => {
     const handleFavoritosActualizados = (event) => {
-      console.log('🔄 Evento de favoritos recibido en Sidebar:', event.detail);
-      console.log('🔄 Recargando datos del sidebar...');
-      
-      // Recargar los datos del sidebar
+      // Recargar los datos del sidebar cuando se actualizan favoritos
       cargarDatos();
     };
 
-    // Agregar listener
+    // Agregar listener para eventos de favoritos
     window.addEventListener('favoritosActualizados', handleFavoritosActualizados);
 
-    // Cleanup
+    // Cleanup del listener
     return () => {
       window.removeEventListener('favoritosActualizados', handleFavoritosActualizados);
     };
-  }, [username]); // ← username como dependencia
+  }, [username]);
 
+  /**
+   * Verifica si una ruta está activa
+   * @param {string} path - Ruta a verificar
+   * @returns {boolean} True si la ruta está activa
+   */
   const isActive = (path) => location.pathname === path;
 
-  // Función mejorada para filtrar y buscar
+  /**
+   * Obtiene datos filtrados y buscados según los criterios activos
+   * @returns {Array} Datos filtrados y buscados
+   */
   const getFilteredAndSearchedData = () => {
     let data = [];
     
@@ -122,6 +134,10 @@ const Sidebar = () => {
     return data;
   };
 
+  /**
+   * Maneja el clic en los filtros
+   * @param {string} filter - Tipo de filtro a aplicar
+   */
   const handleFilterClick = (filter) => {
     if (activeFilter === filter) {
       setActiveFilter(null);
@@ -132,6 +148,10 @@ const Sidebar = () => {
     }
   };
 
+  /**
+   * Maneja el cambio en el campo de búsqueda
+   * @param {Event} e - Evento del input
+   */
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
@@ -140,7 +160,11 @@ const Sidebar = () => {
   const showSearchResults = searchTerm.trim().length > 0;
   const showFilteredView = activeFilter !== null && !showSearchResults;
 
-  // Función para renderizar un item según su tipo
+  /**
+   * Renderiza un item según su tipo (artista, álbum o lista)
+   * @param {Object} item - Item a renderizar
+   * @returns {JSX.Element} Componente renderizado
+   */
   const renderItem = (item) => {
     if (item.tipo === 'artista') {
       return (
@@ -291,7 +315,7 @@ const Sidebar = () => {
               />
             </div>
             <div className={styles.itemsList}>
-              {/* ============ RESULTADOS DE BÚSQUEDA ============ */}
+              {/* Resultados de búsqueda */}
               {showSearchResults ? (
                 <>
                   {filteredData.length > 0 ? (
@@ -303,7 +327,7 @@ const Sidebar = () => {
                   )}
                 </>
               ) : showFilteredView ? (
-                /* ============ VISTA FILTRADA (SIN BÚSQUEDA) ============ */
+                /* Vista filtrada (sin búsqueda) */
                 <>
                   {filteredData.length > 0 ? (
                     filteredData.map(item => renderItem(item))
@@ -314,7 +338,7 @@ const Sidebar = () => {
                   )}
                 </>
               ) : (
-                /* ============ VISTA COMPLETA (SIN FILTRO NI BÚSQUEDA) ============ */
+                /* Vista completa (sin filtro ni búsqueda) */
                 <>
                   {artistasFavoritos.length > 0 && (
                     <>
@@ -399,7 +423,7 @@ const Sidebar = () => {
           </div>
         </>
       ) : (
-        /* ============ MODO COLAPSADO ============ */
+        /* Modo colapsado */
         <>
           <button
             className={`${styles.collapsedIcon} ${isActive('/user/home') ? styles.active : ''}`}

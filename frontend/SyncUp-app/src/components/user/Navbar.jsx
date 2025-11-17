@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaSearch, FaUser, FaCog, FaSignOutAlt, FaMusic, FaMicrophone, FaCompactDisc, FaFilter, FaUserCircle, FaUserFriends, FaFileCsv } from 'react-icons/fa';
+import { FaSearch, FaUser, FaSignOutAlt, FaMusic, FaMicrophone, FaCompactDisc, FaFilter, FaUserCircle, FaUserFriends, FaFileCsv } from 'react-icons/fa';
 import { GoHome } from "react-icons/go";
 import './Navbar.css';
 import { buscarPorPrefijo } from '../../services/trieService';
@@ -8,13 +8,19 @@ import { useMusicPlayer } from '../../contexts/MusicPlayerContext';
 import AdvancedSearch from '../AdvancedSearch/AdvancedSearch';
 import { descargarReporteUsuario } from '../../services/reportesService';
 
+/**
+ * Componente de barra de navegación principal
+ * Incluye búsqueda, navegación, menú de usuario y funcionalidades avanzadas
+ * 
+ * @param {string} userName - Nombre del usuario actual
+ * @param {function} onSearch - Callback para búsquedas
+ * @param {function} onLogout - Callback para cierre de sesión
+ */
 const Navbar = ({ userName = 'Usuario', onSearch, onLogout }) => {
   const navigate = useNavigate();
   const { playSong, currentSong, isPlaying, pauseSong } = useMusicPlayer();
   
-  // ========================================
-  // ESTADOS
-  // ========================================
+  // Estados del componente
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -27,17 +33,14 @@ const Navbar = ({ userName = 'Usuario', onSearch, onLogout }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   
-  // ========================================
-  // REFS
-  // ========================================
+  // Referencias para manejar clicks externos
   const dropdownRef = useRef(null);
   const searchRef = useRef(null);
   const searchTimeoutRef = useRef(null);
 
-  // ========================================
-  // EFFECTS
-  // ========================================
-  
+  /**
+   * Efecto para manejar clicks fuera del dropdown y resultados de búsqueda
+   */
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -57,10 +60,10 @@ const Navbar = ({ userName = 'Usuario', onSearch, onLogout }) => {
     };
   }, []);
 
-  // ========================================
-  // HANDLERS - BÚSQUEDA
-  // ========================================
-  
+  /**
+   * Maneja el cambio en el campo de búsqueda con debounce
+   * @param {Event} e - Evento del input
+   */
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
@@ -96,6 +99,10 @@ const Navbar = ({ userName = 'Usuario', onSearch, onLogout }) => {
     }, 300);
   };
 
+  /**
+   * Maneja el envío del formulario de búsqueda
+   * @param {Event} e - Evento del formulario
+   */
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     
@@ -153,6 +160,12 @@ const Navbar = ({ userName = 'Usuario', onSearch, onLogout }) => {
     setShowAdvancedSearch(true);
   };
 
+  /**
+   * Maneja el clic en un resultado de búsqueda
+   * @param {string} type - Tipo de resultado (cancion, artista, album, usuario)
+   * @param {Object} item - Item seleccionado
+   * @param {number} index - Índice del item en la lista
+   */
   const handleResultClick = (type, item, index) => {
     setShowSearchResults(false);
     setSearchQuery('');
@@ -160,7 +173,6 @@ const Navbar = ({ userName = 'Usuario', onSearch, onLogout }) => {
     switch(type) {
       case 'cancion':
         const cancionId = item._id || item.songId || item.cancionId;
-        console.log('🎵 Reproduciendo:', item.titulo, 'ID:', cancionId);
         
         if (cancionId) {
           playSong(item, searchResults.canciones, index);
@@ -169,7 +181,6 @@ const Navbar = ({ userName = 'Usuario', onSearch, onLogout }) => {
         
       case 'artista':
         const artistaId = item.artistId || item._id || item.id;
-        console.log('🎤 Click en artista:', item.nombre, 'ID:', artistaId);
         
         if (artistaId) {
           navigate(`/user/artist/${artistaId}`);
@@ -178,7 +189,6 @@ const Navbar = ({ userName = 'Usuario', onSearch, onLogout }) => {
         
       case 'album':
         const albumIdDirecto = item._id || item.id || item.albumId;
-        console.log('💿 Click en álbum:', item.nombre, 'ID:', albumIdDirecto);
         
         if (albumIdDirecto) {
           navigate(`/user/album/${albumIdDirecto}`);
@@ -187,7 +197,6 @@ const Navbar = ({ userName = 'Usuario', onSearch, onLogout }) => {
         
       case 'usuario':
         const username = item.username || item._id;
-        console.log('👤 Click en usuario:', item.nombre, 'Username:', username);
       
         if (username) {
           const currentUsername = localStorage.getItem('userName');
@@ -205,71 +214,68 @@ const Navbar = ({ userName = 'Usuario', onSearch, onLogout }) => {
     }
   };
 
-  // ========================================
-  // HANDLERS - NAVEGACIÓN
-  // ========================================
-  
+  /**
+   * Navega a la página de inicio
+   */
   const handleLogoClick = () => {
     navigate('/user/home');
   };
 
+  /**
+   * Navega a la página de inicio
+   */
   const handleHomeClick = () => {
     navigate('/user/home');
   };
 
-  // ← NUEVO HANDLER
+  /**
+   * Navega a la página de sugerencias de personas
+   */
   const handleSuggestionsClick = () => {
     navigate('/user/suggestions');
   };
 
-  // ========================================
-  // HANDLERS - USUARIO
-  // ========================================
-  
+  /**
+   * Maneja el cierre de sesión del usuario
+   */
   const handleLogout = () => {
     setShowDropdown(false);
     onLogout?.();
   };
 
+  /**
+   * Navega al perfil del usuario
+   */
   const handleProfile = () => {
     setShowDropdown(false);
     navigate('/user/profile');
   };
 
-const handleReportesClick = async () => {
-  try {
-    console.log('🔄 Descargando reporte del usuario...');
-    
-    await descargarReporteUsuario();
-    
-    console.log('✅ Reporte descargado exitosamente');
-    setShowUserDropdown(false);
-    
-  } catch (error) {
-    console.error('❌ Error al generar reporte:', error);
-    alert('❌ Error al generar el reporte. Por favor, intenta de nuevo.');
-  }
-};
+  /**
+   * Maneja la descarga de reportes del usuario
+   */
+  const handleReportesClick = async () => {
+    try {
+      await descargarReporteUsuario();
+      setShowDropdown(false);
+    } catch (error) {
+      console.error('Error al generar reporte:', error);
+      alert('Error al generar el reporte. Por favor, intenta de nuevo.');
+    }
+  };
 
-  // ========================================
-  // COMPUTED VALUES
-  // ========================================
-  
+  // Calcula el total de resultados de búsqueda
   const totalResults = searchResults.canciones.length + 
                       searchResults.artistas.length + 
                       searchResults.albums.length +
                       searchResults.usuarios.length;
 
-  // ========================================
-  // RENDER
-  // ========================================
-  
   return (
     <>
       <nav className="navbar">
         <div className="navbar-container">
           
-          {/* LOGO */}
+          {/* Sección del logo */}
           <div className="logo-section">
             <button 
               className="logo-button" 
@@ -280,7 +286,7 @@ const handleReportesClick = async () => {
             </button>
           </div>
 
-          {/* CENTRO: HOME + BÚSQUEDA */}
+          {/* Grupo central: Inicio, Sugerencias y Búsqueda */}
           <div className="center-group">
             <button 
               className="home-button"
@@ -290,12 +296,11 @@ const handleReportesClick = async () => {
               <GoHome />
             </button>
 
-            {/* ← NUEVO BOTÓN DE SUGERENCIAS */}
             <button 
               className="suggestions-button"
               onClick={handleSuggestionsClick}
               aria-label="Descubrir personas"
-              title="Descubrir personas (RF-008)"
+              title="Descubrir personas"
             >
               <FaUserFriends />
             </button>
@@ -316,12 +321,12 @@ const handleReportesClick = async () => {
                   type="button"
                   className="advanced-search-button"
                   onClick={() => setShowAdvancedSearch(true)}
-                  title="Búsqueda avanzada (RF-004)"
+                  title="Búsqueda avanzada"
                 >
                   <FaFilter />
                 </button>
                 
-                {/* Dropdown de resultados */}
+                {/* Dropdown de resultados de búsqueda */}
                 {showSearchResults && totalResults > 0 && (
                   <div className="search-dropdown">
                     {isSearching && (
@@ -333,7 +338,7 @@ const handleReportesClick = async () => {
 
                     {!isSearching && (
                       <>
-                        {/* CANCIONES */}
+                        {/* Sección de canciones */}
                         {searchResults.canciones.length > 0 && (
                           <div className="search-section-results" key="canciones-section">
                             <h4 className="search-section-title">
@@ -374,7 +379,7 @@ const handleReportesClick = async () => {
                           </div>
                         )}
 
-                        {/* ARTISTAS */}
+                        {/* Sección de artistas */}
                         {searchResults.artistas.length > 0 && (
                           <div className="search-section-results" key="artistas-section">
                             <h4 className="search-section-title">
@@ -400,7 +405,7 @@ const handleReportesClick = async () => {
                           </div>
                         )}
 
-                        {/* ÁLBUMES */}
+                        {/* Sección de álbumes */}
                         {searchResults.albums.length > 0 && (
                           <div className="search-section-results" key="albums-section">
                             <h4 className="search-section-title">
@@ -426,7 +431,7 @@ const handleReportesClick = async () => {
                           </div>
                         )}
 
-                        {/* USUARIOS */}
+                        {/* Sección de usuarios */}
                         {searchResults.usuarios.length > 0 && (
                           <div className="search-section-results" key="usuarios-section">
                             <h4 className="search-section-title">
@@ -454,7 +459,7 @@ const handleReportesClick = async () => {
                   </div>
                 )}
 
-                {/* Sin resultados */}
+                {/* Mensaje de sin resultados */}
                 {showSearchResults && totalResults === 0 && !isSearching && searchQuery.trim() && (
                   <div className="search-dropdown">
                     <div className="search-no-results">
@@ -467,7 +472,7 @@ const handleReportesClick = async () => {
             </form>
           </div>
 
-          {/* USUARIO */}
+          {/* Sección del usuario */}
           <div className="user-section" ref={dropdownRef}>
             <button 
               className="user-button"
@@ -485,12 +490,11 @@ const handleReportesClick = async () => {
                   <FaUser />
                   <span>Perfil</span>
                 </button>
-                {/* ← NUEVO ITEM EN DROPDOWN */}
                 <button className="dropdown-item" onClick={handleSuggestionsClick}>
                   <FaUserFriends />
                   <span>Descubrir personas</span>
                 </button>
-                <button className="dropdown-item" onClick={handleReportesClick }> 
+                <button className="dropdown-item" onClick={handleReportesClick}> 
                   <FaFileCsv /> 
                   <span>Reportes</span>
                 </button>
@@ -505,6 +509,7 @@ const handleReportesClick = async () => {
         </div>
       </nav>
 
+      {/* Modal de búsqueda avanzada */}
       {showAdvancedSearch && (
         <AdvancedSearch onClose={() => setShowAdvancedSearch(false)} />
       )}

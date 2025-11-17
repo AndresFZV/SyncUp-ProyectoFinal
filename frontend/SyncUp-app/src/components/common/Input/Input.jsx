@@ -1,11 +1,24 @@
-/**
- * INPUT COMPONENT - Input reutilizable con validación
- */
-
 import React, { useState } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import styles from './Input.module.css';
 
+/**
+ * Componente de input reutilizable con soporte para validación, iconos y tipo password
+ * 
+ * @param {string} label - Etiqueta descriptiva del input
+ * @param {string} type - Tipo de input HTML ('text', 'password', 'email', etc.)
+ * @param {string} name - Nombre del campo para formularios
+ * @param {string} value - Valor actual del input
+ * @param {string} placeholder - Texto placeholder
+ * @param {string} error - Mensaje de error a mostrar
+ * @param {React.ReactNode} icon - Icono opcional a mostrar a la izquierda
+ * @param {boolean} required - Indica si el campo es obligatorio
+ * @param {boolean} disabled - Estado deshabilitado del input
+ * @param {function} onChange - Función manejadora del evento change
+ * @param {function} onBlur - Función manejadora del evento blur
+ * @param {string} className - Clases CSS adicionales
+ * @param {object} props - Props adicionales para el elemento input
+ */
 const Input = ({
   label,
   type = 'text',

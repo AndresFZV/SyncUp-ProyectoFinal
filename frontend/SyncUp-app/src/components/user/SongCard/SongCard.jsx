@@ -2,7 +2,20 @@ import React from 'react';
 import { FaPlay } from 'react-icons/fa';
 import styles from './SongCard.module.css';
 
+/**
+ * Componente de tarjeta para mostrar información de una canción
+ * Permite reproducir la canción al hacer clic en la tarjeta
+ * 
+ * @param {Object} song - Objeto con la información de la canción
+ * @param {string} song.titulo - Título de la canción
+ * @param {string} song.artistaNombre - Nombre del artista
+ * @param {string} song.imagenUrl - URL de la imagen de la canción o álbum
+ * @param {function} onPlay - Función callback que se ejecuta al reproducir la canción
+ */
 const SongCard = ({ song, onPlay }) => {
+  /**
+   * Maneja el clic en la canción para iniciar la reproducción
+   */
   const handleClick = () => {
     if (onPlay) {
       onPlay(song);

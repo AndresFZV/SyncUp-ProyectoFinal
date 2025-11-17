@@ -23,6 +23,10 @@ import {
 } from '../../../services/favoritosService';
 import styles from './MusicPlayer.module.css';
 
+/**
+ * Componente del reproductor de música principal
+ * Controla la reproducción, volumen, favoritos y navegación entre canciones
+ */
 const MusicPlayer = () => {
   const navigate = useNavigate();
   const {
@@ -50,6 +54,9 @@ const MusicPlayer = () => {
   const username = localStorage.getItem('userName');
 
   useEffect(() => {
+    /**
+     * Verifica si la canción actual está marcada como favorita
+     */
     const verificarFavorito = async () => {
       if (!currentSong || !username) {
         setIsFavorita(false);
@@ -71,6 +78,11 @@ const MusicPlayer = () => {
     verificarFavorito();
   }, [currentSong, username]);
 
+  /**
+   * Formatea el tiempo de segundos a formato mm:ss
+   * @param {number} time - Tiempo en segundos
+   * @returns {string} Tiempo formateado
+   */
   const formatTime = (time) => {
     if (isNaN(time)) return '0:00';
     const minutes = Math.floor(time / 60);
@@ -78,6 +90,10 @@ const MusicPlayer = () => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  /**
+   * Maneja el clic en la barra de progreso para cambiar el tiempo de reproducción
+   * @param {Event} e - Evento del clic
+   */
   const handleProgressClick = (e) => {
     const progressBar = e.currentTarget;
     const clickPosition = e.nativeEvent.offsetX;
@@ -86,10 +102,17 @@ const MusicPlayer = () => {
     seek(newTime);
   };
 
+  /**
+   * Maneja el cambio de volumen
+   * @param {Event} e - Evento del input range
+   */
   const handleVolumeChange = (e) => {
     changeVolume(parseFloat(e.target.value));
   };
 
+  /**
+   * Navega a la página del álbum de la canción actual
+   */
   const handleAlbumClick = () => {
     if (!currentSong) return;
 
@@ -101,6 +124,10 @@ const MusicPlayer = () => {
     }
   };
 
+  /**
+   * Navega a la página del artista de la canción actual
+   * @param {Event} e - Evento del clic
+   */
   const handleArtistaClick = (e) => {
     e.stopPropagation();
 
@@ -114,6 +141,10 @@ const MusicPlayer = () => {
     }
   };
 
+  /**
+   * Maneja el toggle de favoritos para la canción actual
+   * @param {Event} e - Evento del clic
+   */
   const handleToggleFavorito = async (e) => {
     e.stopPropagation();
 
@@ -128,15 +159,13 @@ const MusicPlayer = () => {
       if (isFavorita) {
         await eliminarCancionFavorita(username, cancionId);
         setIsFavorita(false);
-        console.log('✅ Canción quitada de favoritas');
       } else {
         await agregarCancionFavorita(username, cancionId);
         setIsFavorita(true);
-        console.log('✅ Canción agregada a favoritas');
       }
 
     } catch (error) {
-      console.error('❌ Error al actualizar favorito:', error);
+      console.error('Error al actualizar favorito:', error);
       alert('Error al actualizar favoritos');
     } finally {
       setProcesandoFavorito(false);
@@ -236,9 +265,6 @@ const MusicPlayer = () => {
           </div>
 
           <div className={styles.volumeControl}>
-            
-
-            {/* ← BOTÓN DE COLA ACTUALIZADO */}
             <button 
               className={`${styles.queueButton} ${isQueueOpen ? styles.active : ''}`}
               onClick={toggleQueue}
@@ -266,7 +292,6 @@ const MusicPlayer = () => {
             <button className={styles.fullSButton} title="Pantalla completa">
               <BiFullscreen size={20} />
             </button>
-
           </div>
         </>
       ) : (

@@ -4,52 +4,52 @@ import styles from './MultiSongRecommendations.module.css';
 import { getCancionesSimilares } from '../../services/grafoService';
 import { useMusicPlayer } from '../../contexts/MusicPlayerContext';
 
+/**
+ * Componente que genera recomendaciones musicales basadas en múltiples canciones de referencia
+ * Utiliza un grafo de similitudes para encontrar canciones relacionadas
+ * 
+ * @param {Array} canciones - Lista de canciones de referencia para generar recomendaciones
+ * @param {number} limite - Número máximo de recomendaciones a mostrar (por defecto 12)
+ */
 const MultiSongRecommendations = ({ canciones, limite = 12 }) => {
   const [recomendaciones, setRecomendaciones] = useState([]);
   const [loading, setLoading] = useState(false);
   const { playSong, currentSong, isPlaying, pauseSong } = useMusicPlayer();
 
   useEffect(() => {
-    console.log('🔍 MultiSongRecommendations montado');
-    console.log('📦 Canciones recibidas:', canciones?.length);
-    
     if (canciones && canciones.length > 0) {
       cargarRecomendacionesMixtas();
     }
   }, [canciones]);
 
+  /**
+   * Carga recomendaciones combinadas basadas en las canciones de referencia
+   * Analiza hasta 5 canciones y combina sus recomendaciones
+   */
   const cargarRecomendacionesMixtas = async () => {
-    console.log('🚀 Iniciando carga de recomendaciones...');
     setLoading(true);
     
     try {
       const todasRecomendaciones = [];
       const cancionesParaAnalizar = canciones.slice(0, Math.min(5, canciones.length));
       
-      console.log('🎯 Analizando', cancionesParaAnalizar.length, 'canciones');
-      
       for (const cancion of cancionesParaAnalizar) {
         try {
           const cancionId = cancion.cancionId || cancion.songId;
           
           if (!cancionId) {
-            console.warn('⚠️ Canción sin ID:', cancion);
             continue;
           }
           
-          console.log('🔍 Buscando similares para:', cancion.titulo);
           const recs = await getCancionesSimilares(cancionId, 15);
-          console.log('✅ Encontradas', recs.length, 'recomendaciones');
           todasRecomendaciones.push(...recs);
           
         } catch (error) {
-          console.error('❌ Error:', error);
+          console.error('Error cargando recomendaciones para canción:', error);
         }
       }
 
-      console.log('📊 Total recomendaciones brutas:', todasRecomendaciones.length);
-
-      // Filtrar duplicados y favoritos
+      // Filtrar duplicados y canciones ya en favoritos
       const idsUnicos = new Map();
       const idsFavoritos = new Set(canciones.map(c => c.cancionId || c.songId));
       
@@ -72,24 +72,27 @@ const MultiSongRecommendations = ({ canciones, limite = 12 }) => {
         }
       });
 
+      // Ordenar por frecuencia y aplicar límite
       const recsOrdenadas = Array.from(idsUnicos.values())
         .sort((a, b) => b.frecuencia - a.frecuencia)
         .map(item => item.cancion)
         .slice(0, limite);
 
-      console.log('✅ Recomendaciones finales:', recsOrdenadas.length);
-      console.log('📋 Recomendaciones:', recsOrdenadas);
-      
       setRecomendaciones(recsOrdenadas);
       
     } catch (error) {
-      console.error('❌ Error general:', error);
+      console.error('Error general cargando recomendaciones:', error);
       setRecomendaciones([]);
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Maneja la reproducción/pausa de una canción
+   * @param {Object} cancion - Canción a reproducir
+   * @param {number} index - Índice de la canción en la lista
+   */
   const handlePlaySong = (cancion, index) => {
     const cancionId = cancion.songId || cancion.cancionId;
     const currentId = currentSong?.songId || currentSong?.cancionId;
@@ -105,20 +108,18 @@ const MultiSongRecommendations = ({ canciones, limite = 12 }) => {
     }
   };
 
+  /**
+   * Formatea la duración de segundos a formato mm:ss
+   * @param {number} duracion - Duración en segundos
+   * @returns {string} Duración formateada
+   */
   const formatDuration = (duracion) => {
     const minutes = Math.floor(duracion);
     const seconds = Math.round((duracion % 1) * 60);
     return `${minutes}:${String(seconds).padStart(2, '0')}`;
   };
 
-  console.log('🎨 Estado actual:', { 
-    loading, 
-    recomendacionesLength: recomendaciones.length,
-    shouldRender: !loading && recomendaciones.length > 0
-  });
-
   if (loading) {
-    console.log('⏳ Mostrando loading...');
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.spinner}></div>
@@ -128,11 +129,8 @@ const MultiSongRecommendations = ({ canciones, limite = 12 }) => {
   }
 
   if (recomendaciones.length === 0) {
-    console.log('❌ Sin recomendaciones, no renderizando nada');
     return null;
   }
-
-  console.log('✅ RENDERIZANDO', recomendaciones.length, 'RECOMENDACIONES');
 
   return (
     <div className={styles.recommendationsContainer}>

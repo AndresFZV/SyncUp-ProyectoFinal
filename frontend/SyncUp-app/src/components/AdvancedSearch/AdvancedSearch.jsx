@@ -5,6 +5,10 @@ import styles from './AdvancedSearch.module.css';
 import { busquedaAvanzada, crearCriteriosVacios, tieneCriterios } from '../../services/busquedaService';
 import { useMusicPlayer } from '../../contexts/MusicPlayerContext';
 
+/**
+ * Componente de búsqueda avanzada que permite buscar canciones, artistas, álbumes y usuarios
+ * con múltiples criterios de filtrado y lógica AND/OR
+ */
 const AdvancedSearch = ({ onClose }) => {
   const navigate = useNavigate();
   const { playSong, currentSong, isPlaying, pauseSong } = useMusicPlayer();
@@ -14,6 +18,11 @@ const AdvancedSearch = ({ onClose }) => {
   const [loading, setLoading] = useState(false);
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
+  /**
+   * Maneja los cambios en los campos del formulario
+   * @param {string} field - Campo a actualizar
+   * @param {string} value - Nuevo valor del campo
+   */
   const handleChange = (field, value) => {
     setCriterios(prev => ({
       ...prev,
@@ -21,6 +30,10 @@ const AdvancedSearch = ({ onClose }) => {
     }));
   };
 
+  /**
+   * Ejecuta la búsqueda con los criterios actuales
+   * @param {Event} e - Evento del formulario
+   */
   const handleSearch = async (e) => {
     e?.preventDefault();
     
@@ -31,23 +44,29 @@ const AdvancedSearch = ({ onClose }) => {
 
     setLoading(true);
     try {
-      console.log('🔍 Búsqueda avanzada con criterios:', criterios);
       const data = await busquedaAvanzada(criterios);
-      console.log('✅ Resultados:', data);
       setResultados(data);
     } catch (error) {
-      console.error('❌ Error:', error);
+      console.error('Error en búsqueda:', error);
       alert('Error al realizar la búsqueda');
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Reinicia los criterios de búsqueda y los resultados
+   */
   const handleReset = () => {
     setCriterios(crearCriteriosVacios());
     setResultados(null);
   };
 
+  /**
+   * Maneja el clic en una canción para reproducir/pausar
+   * @param {Object} cancion - Canción seleccionada
+   * @param {number} index - Índice de la canción en la lista
+   */
   const handleSongClick = (cancion, index) => {
     const cancionId = cancion._id || cancion.songId;
     const currentId = currentSong?._id || currentSong?.songId;
@@ -59,27 +78,49 @@ const AdvancedSearch = ({ onClose }) => {
     }
   };
 
+  /**
+   * Navega al perfil del artista
+   * @param {string} artistaId - ID del artista
+   */
   const handleArtistClick = (artistaId) => {
     navigate(`/user/artist/${artistaId}`);
     onClose?.();
   };
 
+  /**
+   * Navega a la página del álbum
+   * @param {string} albumId - ID del álbum
+   */
   const handleAlbumClick = (albumId) => {
     navigate(`/user/album/${albumId}`);
     onClose?.();
   };
 
+  /**
+   * Navega al perfil de usuario
+   * @param {string} username - Nombre de usuario
+   */
   const handleUsuarioClick = (username) => {
     navigate(`/user/profile/${username}`);
     onClose?.();
   };
 
+  /**
+   * Formatea la duración de segundos a formato mm:ss
+   * @param {number} duracion - Duración en segundos
+   * @returns {string} Duración formateada
+   */
   const formatDuration = (duracion) => {
     const minutes = Math.floor(duracion);
     const seconds = Math.round((duracion % 1) * 60);
     return `${minutes}:${String(seconds).padStart(2, '0')}`;
   };
 
+  /**
+   * Verifica si una canción es la que se está reproduciendo actualmente
+   * @param {string} cancionId - ID de la canción
+   * @returns {boolean} True si es la canción actual
+   */
   const isCurrentSong = (cancionId) => {
     const currentId = currentSong?._id || currentSong?.songId;
     return currentId === cancionId;
@@ -103,7 +144,7 @@ const AdvancedSearch = ({ onClose }) => {
         <form className={styles.form} onSubmit={handleSearch}>
           {/* Búsqueda general (Trie) */}
           <div className={styles.formGroup}>
-            <label>Búsqueda general (RF-003: Autocompletado)</label>
+            <label>Búsqueda general</label>
             <input
               type="text"
               placeholder="Título, artista, género, usuario..."
@@ -121,7 +162,7 @@ const AdvancedSearch = ({ onClose }) => {
             onClick={() => setMostrarFiltros(!mostrarFiltros)}
           >
             <FaFilter />
-            {mostrarFiltros ? 'Ocultar filtros avanzados' : 'Mostrar filtros avanzados (RF-004)'}
+            {mostrarFiltros ? 'Ocultar filtros avanzados' : 'Mostrar filtros avanzados'}
           </button>
 
           {/* Filtros avanzados */}
@@ -181,7 +222,7 @@ const AdvancedSearch = ({ onClose }) => {
 
               {/* Lógica AND/OR */}
               <div className={styles.formGroup}>
-                <label>Lógica de filtros (RF-004)</label>
+                <label>Lógica de filtros</label>
                 <div className={styles.radioGroup}>
                   <label className={styles.radioLabel}>
                     <input
@@ -231,7 +272,7 @@ const AdvancedSearch = ({ onClose }) => {
         {loading && (
           <div className={styles.loading}>
             <div className={styles.spinner}></div>
-            <p>RF-030: Búsqueda con hilos en paralelo...</p>
+            <p>Búsqueda con hilos en paralelo...</p>
           </div>
         )}
 
@@ -257,7 +298,7 @@ const AdvancedSearch = ({ onClose }) => {
             {/* Canciones */}
             {resultados.canciones && resultados.canciones.length > 0 && (
               <div className={styles.section}>
-                <h3>🎵 Canciones ({resultados.canciones.length})</h3>
+                <h3>Canciones ({resultados.canciones.length})</h3>
                 <div className={styles.songsList}>
                   {resultados.canciones.map((cancion, index) => {
                     const cancionId = cancion._id || cancion.songId;
@@ -290,7 +331,7 @@ const AdvancedSearch = ({ onClose }) => {
             {/* Artistas */}
             {resultados.artistas && resultados.artistas.length > 0 && (
               <div className={styles.section}>
-                <h3>🎤 Artistas ({resultados.artistas.length})</h3>
+                <h3>Artistas ({resultados.artistas.length})</h3>
                 <div className={styles.artistsList}>
                   {resultados.artistas.map((artista) => (
                     <div
@@ -310,7 +351,7 @@ const AdvancedSearch = ({ onClose }) => {
             {/* Álbumes */}
             {resultados.albums && resultados.albums.length > 0 && (
               <div className={styles.section}>
-                <h3>💿 Álbumes ({resultados.albums.length})</h3>
+                <h3>Álbumes ({resultados.albums.length})</h3>
                 <div className={styles.albumsList}>
                   {resultados.albums.map((album) => (
                     <div
@@ -329,7 +370,7 @@ const AdvancedSearch = ({ onClose }) => {
             {/* Usuarios */}
             {resultados.usuarios && resultados.usuarios.length > 0 && (
               <div className={styles.section}>
-                <h3>👤 Usuarios ({resultados.usuarios.length})</h3>
+                <h3>Usuarios ({resultados.usuarios.length})</h3>
                 <div className={styles.usuariosList}>
                   {resultados.usuarios.map((usuario) => (
                     <div

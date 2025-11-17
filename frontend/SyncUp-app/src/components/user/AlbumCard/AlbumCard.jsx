@@ -3,9 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import { FaPlay } from 'react-icons/fa';
 import styles from './AlbumCard.module.css';
 
+/**
+ * Componente de tarjeta para mostrar información de un álbum
+ * Permite navegar a la página detallada del álbum al hacer clic
+ * 
+ * @param {Object} album - Objeto con la información del álbum
+ * @param {string} album.albumId - ID único del álbum
+ * @param {string} album.nombre - Nombre del álbum
+ * @param {string} album.artistaNombre - Nombre del artista
+ * @param {string} album.imagenUrl - URL de la imagen del álbum
+ * @param {number} album.anio - Año de lanzamiento (opcional)
+ * @param {number} album.totalCanciones - Número total de canciones (opcional)
+ */
 const AlbumCard = ({ album }) => {
   const navigate = useNavigate();
 
+  /**
+   * Maneja la navegación a la página detallada del álbum
+   */
   const handleClick = () => {
     navigate(`/user/album/${album.albumId}`);
   };

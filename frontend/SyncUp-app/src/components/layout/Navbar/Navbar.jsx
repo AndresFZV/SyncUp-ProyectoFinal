@@ -1,17 +1,21 @@
-/**
- * NAVBAR COMPONENT - Navegación principal
- */
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '../../../utils/constants';
 import styles from './Navbar.module.css';
 
+/**
+ * Componente de barra de navegación principal
+ * Maneja la navegación entre páginas y muestra/oculta botones de autenticación
+ * según la página actual
+ */
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showAuthButtons, setShowAuthButtons] = useState(true);
 
+  /**
+   * Efecto para mostrar/ocultar botones de autenticación en páginas de login/registro
+   */
   useEffect(() => {
     const authPages = [ROUTES.LOGIN, ROUTES.REGISTER];
     setShowAuthButtons(!authPages.includes(location.pathname));

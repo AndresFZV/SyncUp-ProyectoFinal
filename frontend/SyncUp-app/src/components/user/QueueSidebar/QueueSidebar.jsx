@@ -4,6 +4,11 @@ import { MdDragIndicator, MdClose } from 'react-icons/md';
 import { useMusicPlayer } from '../../../contexts/MusicPlayerContext';
 import styles from './QueueSidebar.module.css';
 
+/**
+ * Componente de sidebar que muestra la cola de reproducción actual
+ * Incluye la canción actual en reproducción y las siguientes canciones en cola
+ * Permite gestionar la cola de reproducción (reproducir, eliminar)
+ */
 const QueueSidebar = () => {
   const {
     queue,
@@ -18,6 +23,11 @@ const QueueSidebar = () => {
 
   if (!isQueueOpen) return null;
 
+  /**
+   * Formatea la duración de segundos a formato mm:ss
+   * @param {number} duracion - Duración en segundos
+   * @returns {string} Duración formateada
+   */
   const formatDuration = (duracion) => {
     if (!duracion) return '0:00';
     const minutes = Math.floor(duracion);
@@ -27,12 +37,12 @@ const QueueSidebar = () => {
 
   return (
     <>
-      {/* Overlay */}
+      {/* Overlay de fondo */}
       <div className={styles.overlay} onClick={toggleQueue}></div>
 
-      {/* Sidebar */}
+      {/* Sidebar de cola de reproducción */}
       <div className={styles.sidebar}>
-        {/* Header */}
+        {/* Header del sidebar */}
         <div className={styles.header}>
           <h3>Cola de reproducción</h3>
           <button className={styles.closeButton} onClick={toggleQueue}>
@@ -40,7 +50,7 @@ const QueueSidebar = () => {
           </button>
         </div>
 
-        {/* Radio Mode Badge */}
+        {/* Indicador de modo radio */}
         {radioMode && (
           <div className={styles.radioModeBadge}>
             <FaMusic />
@@ -48,12 +58,12 @@ const QueueSidebar = () => {
           </div>
         )}
 
-        {/* Queue Info */}
+        {/* Información de la cola */}
         <div className={styles.queueInfo}>
           <p>{queue.length} canción{queue.length !== 1 ? 'es' : ''} en cola</p>
         </div>
 
-        {/* Now Playing */}
+        {/* Sección de "Reproduciendo ahora" */}
         {currentSong && (
           <div className={styles.nowPlayingSection}>
             <h4>Reproduciendo ahora</h4>
@@ -75,12 +85,12 @@ const QueueSidebar = () => {
           </div>
         )}
 
-        {/* Queue List */}
+        {/* Lista de canciones siguientes en cola */}
         <div className={styles.queueSection}>
           <h4>Siguiente{queue.length - queueIndex - 1 > 0 ? `s (${queue.length - queueIndex - 1})` : ''}</h4>
           <div className={styles.queueList}>
             {queue.map((song, index) => {
-              // No mostrar la canción actual en "Siguientes"
+              // No mostrar la canción actual en la sección "Siguientes"
               if (index === queueIndex) return null;
 
               const isUpcoming = index > queueIndex;
@@ -91,12 +101,12 @@ const QueueSidebar = () => {
                   key={`${cancionId}-${index}`}
                   className={`${styles.queueItem} ${!isUpcoming ? styles.played : ''}`}
                 >
-                  {/* Drag Handle */}
+                  {/* Manejador de arrastre */}
                   <div className={styles.dragHandle}>
                     <MdDragIndicator />
                   </div>
 
-                  {/* Song Info */}
+                  {/* Información de la canción */}
                   <div 
                     className={styles.songInfo}
                     onClick={() => playFromQueue(index)}
@@ -111,12 +121,12 @@ const QueueSidebar = () => {
                     </div>
                   </div>
 
-                  {/* Duration */}
+                  {/* Duración de la canción */}
                   <span className={styles.duration}>
                     {formatDuration(song.duracion)}
                   </span>
 
-                  {/* Remove Button */}
+                  {/* Botón para eliminar de la cola */}
                   <button
                     className={styles.removeButton}
                     onClick={(e) => {
@@ -131,6 +141,7 @@ const QueueSidebar = () => {
               );
             })}
 
+            {/* Estado vacío cuando no hay más canciones en cola */}
             {queue.length - queueIndex - 1 === 0 && (
               <div className={styles.emptyQueue}>
                 <FaMusic />

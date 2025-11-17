@@ -5,6 +5,13 @@ import styles from './SongRecommendations.module.css';
 import { getCancionesSimilares } from '../../services/grafoService';
 import { useMusicPlayer } from '../../contexts/MusicPlayerContext';
 
+/**
+ * Componente que muestra recomendaciones de canciones similares a la canción actual
+ * Utiliza un grafo de similitudes para encontrar canciones relacionadas por género, artista, álbum y época
+ * 
+ * @param {Object} cancionActual - Canción de referencia para generar recomendaciones
+ * @param {number} limite - Número máximo de recomendaciones a mostrar (por defecto 6)
+ */
 const SongRecommendations = ({ cancionActual, limite = 6 }) => {
   const [recomendaciones, setRecomendaciones] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -17,6 +24,9 @@ const SongRecommendations = ({ cancionActual, limite = 6 }) => {
     }
   }, [cancionActual?.songId]);
 
+  /**
+   * Carga las canciones similares desde el servicio de grafo
+   */
   const cargarRecomendaciones = async () => {
     if (!cancionActual?.songId) return;
 
@@ -32,6 +42,11 @@ const SongRecommendations = ({ cancionActual, limite = 6 }) => {
     }
   };
 
+  /**
+   * Maneja la reproducción/pausa de una canción recomendada
+   * @param {Object} cancion - Canción a reproducir
+   * @param {number} index - Índice de la canción en la lista
+   */
   const handlePlaySong = (cancion, index) => {
     if (currentSong?.songId === cancion.songId) {
       if (isPlaying) {
@@ -44,19 +59,30 @@ const SongRecommendations = ({ cancionActual, limite = 6 }) => {
     }
   };
 
+  /**
+   * Verifica si una canción es la que se está reproduciendo actualmente
+   * @param {string} cancionId - ID de la canción a verificar
+   * @returns {boolean} True si es la canción actual
+   */
   const isCurrentSong = (cancionId) => {
     return currentSong?.songId === cancionId;
   };
 
+  /**
+   * Formatea la duración de segundos a formato mm:ss
+   * @param {number} duracion - Duración en segundos
+   * @returns {string} Duración formateada
+   */
   const formatDuration = (duracion) => {
     const minutes = Math.floor(duracion);
     const seconds = Math.round((duracion % 1) * 60);
     return `${minutes}:${String(seconds).padStart(2, '0')}`;
   };
 
-  // ← NUEVA FUNCIÓN: Navegar con la canción actual
+  /**
+   * Navega a la página de recomendaciones completas guardando la canción base
+   */
   const handleVerTodas = () => {
-    // Guardar la canción base en localStorage para que Recommendations la use
     localStorage.setItem('cancionBaseRecomendaciones', JSON.stringify(cancionActual));
     navigate('/user/recommendations');
   };
@@ -133,7 +159,6 @@ const SongRecommendations = ({ cancionActual, limite = 6 }) => {
         ))}
       </div>
 
-      {/* ← BOTÓN ACTUALIZADO */}
       <button
         className={styles.viewAllButton}
         onClick={handleVerTodas}
