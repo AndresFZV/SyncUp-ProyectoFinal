@@ -10,10 +10,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controlador REST para gestionar las operaciones de canciones.
+ * Proporciona endpoints para CRUD de canciones, carga masiva y búsqueda de canciones similares.
+ */
 @RestController
 @RequestMapping("/api/canciones")
 @RequiredArgsConstructor
@@ -22,13 +27,22 @@ public class CancionController {
 
     private final CancionService cancionService;
 
-    // Listar todas las canciones
+    /**
+     * Obtiene la lista de todas las canciones en formato DTO.
+     *
+     * @return ResponseEntity con la lista de canciones DTO
+     */
     @GetMapping
     public ResponseEntity<List<CancionDTO>> listarCanciones() {
         return ResponseEntity.ok(cancionService.listarCanciones());
     }
 
-    // Obtener canción por ID
+    /**
+     * Obtiene una canción específica por su ID.
+     *
+     * @param id ID de la canción a buscar
+     * @return ResponseEntity con la canción encontrada o error si no existe
+     */
     @GetMapping("/{id}")
     public ResponseEntity<?> obtenerCancion(@PathVariable String id) {
         try {
@@ -38,7 +52,12 @@ public class CancionController {
         }
     }
 
-    // ← NUEVO: Obtener canciones por álbum
+    /**
+     * Obtiene todas las canciones pertenecientes a un álbum específico.
+     *
+     * @param albumId ID del álbum del cual se quieren obtener las canciones
+     * @return ResponseEntity con la lista de canciones del álbum o error si no existe
+     */
     @GetMapping("/album/{albumId}")
     public ResponseEntity<?> obtenerCancionesPorAlbum(@PathVariable String albumId) {
         try {
@@ -52,30 +71,27 @@ public class CancionController {
         }
     }
 
-
-
-    // Agregar canción con archivos
+    /**
+     * Crea una nueva canción con archivos de imagen y audio.
+     *
+     * @param solicitud JSON con los datos de la canción
+     * @param imagen Archivo de imagen para la portada de la canción
+     * @param musica Archivo de audio de la canción
+     * @return ResponseEntity con la canción creada o error en caso de fallo
+     */
     @PostMapping
     public ResponseEntity<?> agregarCancion(
             @RequestPart("solicitud") String solicitud,
             @RequestPart("imagen") MultipartFile imagen,
             @RequestPart("musica") MultipartFile musica) {
         try {
-            System.out.println("=== RECIBIENDO CANCIÓN ===");
-            System.out.println("Solicitud: " + solicitud);
-            System.out.println("Imagen: " + imagen.getOriginalFilename() + " - " + imagen.getSize() + " bytes");
-            System.out.println("Música: " + musica.getOriginalFilename() + " - " + musica.getSize() + " bytes");
             ObjectMapper mapper = new ObjectMapper();
             SolicitudCancion solicitudCancion = mapper.readValue(solicitud, SolicitudCancion.class);
             solicitudCancion.setArchivoImagen(imagen);
             solicitudCancion.setMusica(musica);
             Cancion cancionGuardada = cancionService.addCancion(solicitudCancion);
-            System.out.println("✓ Canción guardada exitosamente: " + cancionGuardada.getTitulo());
             return ResponseEntity.status(HttpStatus.CREATED).body(cancionGuardada);
         } catch (Exception e) {
-            System.err.println("✗ ERROR al guardar canción: " + e.getMessage());
-            e.printStackTrace();
-
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", true);
             errorResponse.put("mensaje", e.getMessage());
@@ -83,7 +99,13 @@ public class CancionController {
         }
     }
 
-    // Actualizar canción
+    /**
+     * Actualiza una canción existente.
+     *
+     * @param id ID de la canción a actualizar
+     * @param cancion Objeto Cancion con los nuevos datos
+     * @return ResponseEntity con la canción actualizada o error si no se encuentra
+     */
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizarCancion(@PathVariable String id, @RequestBody Cancion cancion) {
         try {
@@ -93,7 +115,12 @@ public class CancionController {
         }
     }
 
-    // Eliminar canción
+    /**
+     * Elimina una canción por su ID.
+     *
+     * @param id ID de la canción a eliminar
+     * @return ResponseEntity con mensaje de éxito o error si no se encuentra
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminarCancion(@PathVariable String id) {
         try {
@@ -104,7 +131,13 @@ public class CancionController {
         }
     }
 
-    // Carga masiva
+    /**
+     * Realiza una carga masiva de canciones desde archivos de metadata y multimedia.
+     *
+     * @param archivoMetadata Archivo con los metadatos de las canciones
+     * @param archivoMultimedia Archivo con el contenido multimedia de las canciones
+     * @return ResponseEntity con el número de canciones cargadas o error en caso de fallo
+     */
     @PostMapping("/carga-masiva")
     public ResponseEntity<?> cargaMasiva(
             @RequestParam("archivoMetadata") MultipartFile archivoMetadata,
@@ -122,8 +155,11 @@ public class CancionController {
     }
 
     /**
-     * Obtener canciones similares (mismo género)
-     * GET /api/canciones/{cancionId}/similares
+     * Obtiene canciones similares basadas en el género de una canción específica.
+     *
+     * @param cancionId ID de la canción de referencia
+     * @param limite Número máximo de canciones similares a retornar (por defecto 20)
+     * @return ResponseEntity con la lista de canciones similares o error en caso de fallo
      */
     @GetMapping("/{cancionId}/similares")
     public ResponseEntity<?> obtenerCancionesSimilares(

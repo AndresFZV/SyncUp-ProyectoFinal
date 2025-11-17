@@ -11,6 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controlador REST para gestionar las operaciones del grafo de similitud entre canciones.
+ * Proporciona endpoints para reconstrucción del grafo, búsqueda de canciones similares y rutas.
+ */
 @RestController
 @RequestMapping("/api/grafo")
 @RequiredArgsConstructor
@@ -20,7 +24,10 @@ public class GrafoController {
     private final GrafoService grafoService;
 
     /**
-     * Reconstruir el grafo (útil después de agregar/eliminar canciones)
+     * Reconstruye el grafo de similitud entre canciones.
+     * Útil después de agregar o eliminar canciones del sistema.
+     *
+     * @return ResponseEntity con mensaje de éxito o error en caso de fallo
      */
     @PostMapping("/reconstruir")
     public ResponseEntity<?> reconstruirGrafo() {
@@ -39,7 +46,11 @@ public class GrafoController {
     }
 
     /**
-     * Obtener canciones similares
+     * Obtiene canciones similares a una canción específica basado en el grafo de similitud.
+     *
+     * @param cancionId ID de la canción de referencia
+     * @param limite Número máximo de canciones similares a retornar (por defecto 10)
+     * @return ResponseEntity con la lista de canciones similares o error en caso de fallo
      */
     @GetMapping("/similares/{cancionId}")
     public ResponseEntity<?> obtenerCancionesSimilares(
@@ -58,50 +69,36 @@ public class GrafoController {
     }
 
     /**
-     * Encontrar ruta de máxima similitud (Dijkstra)
+     * Encuentra la ruta de máxima similitud entre dos canciones usando el algoritmo de Dijkstra.
+     *
+     * @param origen ID de la canción de origen
+     * @param destino ID de la canción de destino
+     * @return ResponseEntity con la ruta encontrada o error en caso de fallo
      */
     @GetMapping("/ruta")
     public ResponseEntity<?> encontrarRuta(
             @RequestParam String origen,
             @RequestParam String destino) {
         try {
-            System.out.println("\n════════════════════════════════════════");
-            System.out.println("📥 REQUEST RECIBIDO EN CONTROLLER");
-            System.out.println("   Origen: " + origen);
-            System.out.println("   Destino: " + destino);
-            System.out.println("════════════════════════════════════════");
-
             Map<String, Object> resultado = grafoService.encontrarRutaSimilitud(origen, destino);
-
-            System.out.println("✅ Respuesta enviada al frontend");
-            System.out.println("════════════════════════════════════════\n");
-
             return ResponseEntity.ok(resultado);
-
         } catch (RuntimeException e) {
-            System.err.println("❌ ERROR EN CONTROLLER: " + e.getMessage());
-            e.printStackTrace();
-
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", true);
             errorResponse.put("mensaje", e.getMessage());
-
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-
         } catch (Exception e) {
-            System.err.println("❌ ERROR INESPERADO EN CONTROLLER: " + e.getMessage());
-            e.printStackTrace();
-
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", true);
             errorResponse.put("mensaje", "Error interno del servidor: " + e.getMessage());
-
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
     /**
-     * Obtener estadísticas del grafo
+     * Obtiene estadísticas del grafo actual.
+     *
+     * @return ResponseEntity con las estadísticas del grafo o error en caso de fallo
      */
     @GetMapping("/estadisticas")
     public ResponseEntity<?> obtenerEstadisticas() {

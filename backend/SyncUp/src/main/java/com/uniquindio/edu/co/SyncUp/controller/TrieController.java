@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * RF-025 y RF-026: API REST para búsquedas con Trie
+ * Controlador REST para gestionar las operaciones de búsqueda usando la estructura Trie.
+ * Proporciona endpoints para búsqueda por prefijo, sugerencias y gestión del Trie.
  */
 @RestController
 @RequestMapping("/api/trie")
@@ -21,8 +22,11 @@ public class TrieController {
     private final TrieService trieService;
 
     /**
-     * RF-026: Buscar por prefijo
-     * GET /api/trie/buscar?q=frank&limite=10
+     * Realiza una búsqueda por prefijo en la estructura Trie.
+     *
+     * @param prefijo Prefijo a buscar en los términos indexados
+     * @param limite Número máximo de resultados a retornar (por defecto 10)
+     * @return ResponseEntity con los resultados de búsqueda o error en caso de fallo
      */
     @GetMapping("/buscar")
     public ResponseEntity<ResultadoBusquedaDTO> buscarPorPrefijo(
@@ -39,8 +43,11 @@ public class TrieController {
     }
 
     /**
-     * Obtener solo sugerencias de palabras
-     * GET /api/trie/sugerencias?q=frank&limite=5
+     * Obtiene sugerencias de palabras basadas en un prefijo.
+     *
+     * @param prefijo Prefijo para generar sugerencias
+     * @param limite Número máximo de sugerencias a retornar (por defecto 5)
+     * @return ResponseEntity con la lista de sugerencias o error en caso de fallo
      */
     @GetMapping("/sugerencias")
     public ResponseEntity<List<String>> obtenerSugerencias(
@@ -57,8 +64,10 @@ public class TrieController {
     }
 
     /**
-     * Verificar si una palabra existe
-     * GET /api/trie/existe?palabra=frank
+     * Verifica si una palabra específica existe en el Trie.
+     *
+     * @param palabra Palabra a verificar en el Trie
+     * @return ResponseEntity con el resultado de la verificación o error en caso de fallo
      */
     @GetMapping("/existe")
     public ResponseEntity<Map<String, Boolean>> existe(@RequestParam String palabra) {
@@ -72,8 +81,9 @@ public class TrieController {
     }
 
     /**
-     * Reconstruir el Trie
-     * POST /api/trie/reconstruir
+     * Reconstruye la estructura Trie desde la base de datos.
+     *
+     * @return ResponseEntity con mensaje de éxito o error en caso de fallo
      */
     @PostMapping("/reconstruir")
     public ResponseEntity<Map<String, String>> reconstruirTrie() {
@@ -91,8 +101,9 @@ public class TrieController {
     }
 
     /**
-     * Obtener estadísticas del Trie
-     * GET /api/trie/estadisticas
+     * Obtiene estadísticas de la estructura Trie actual.
+     *
+     * @return ResponseEntity con las estadísticas del Trie o error en caso de fallo
      */
     @GetMapping("/estadisticas")
     public ResponseEntity<Map<String, Object>> obtenerEstadisticas() {

@@ -12,14 +12,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Controlador REST para el Grafo Social
- * RF-008: Sugerencias de usuarios
- * RF-023: Grafo No Dirigido
- * RF-024: Recorridos BFS
+ * Controlador REST para el grafo social de usuarios.
+ * Proporciona endpoints para sugerencias de usuarios, conexiones sociales y recorridos en el grafo.
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/grafo-social")  // ← CAMBIADO
+@RequestMapping("/api/grafo-social")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class GrafoSocialController {
@@ -27,31 +25,29 @@ public class GrafoSocialController {
     private final GrafoSocialService grafoSocialService;
 
     /**
-     * RF-008: Obtener sugerencias de usuarios para seguir
+     * Obtiene sugerencias de usuarios para seguir basadas en conexiones sociales.
      *
-     * GET /api/grafo-social/sugerencias/{username}?limite=10
+     * @param username Nombre de usuario para el cual obtener sugerencias
+     * @param limite Número máximo de sugerencias a retornar (por defecto 10)
+     * @return ResponseEntity con la lista de sugerencias o error en caso de fallo
      */
     @GetMapping("/sugerencias/{username}")
     public ResponseEntity<?> obtenerSugerencias(
             @PathVariable String username,
             @RequestParam(defaultValue = "10") int limite) {
         try {
-            log.info("📥 Solicitud de sugerencias para: {}", username);
-
+            log.info("Solicitud de sugerencias para: {}", username);
             List<Map<String, Object>> sugerencias =
                     grafoSocialService.obtenerSugerencias(username, limite);
-
             Map<String, Object> response = new HashMap<>();
             response.put("sugerencias", sugerencias);
             response.put("total", sugerencias.size());
             response.put("usuario", username);
             response.put("algoritmo", "BFS + Scoring");
-
-            log.info("✅ Devueltas {} sugerencias", sugerencias.size());
+            log.info("Devueltas {} sugerencias", sugerencias.size());
             return ResponseEntity.ok(response);
-
         } catch (RuntimeException e) {
-            log.error("❌ Error al obtener sugerencias: {}", e.getMessage());
+            log.error("Error al obtener sugerencias: {}", e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", true);
             errorResponse.put("mensaje", e.getMessage());
@@ -60,22 +56,20 @@ public class GrafoSocialController {
     }
 
     /**
-     * Obtener información de conexiones de un usuario
+     * Obtiene información de conexiones sociales de un usuario.
      *
-     * GET /api/grafo-social/conexiones/{username}
+     * @param username Nombre de usuario del cual obtener las conexiones
+     * @return ResponseEntity con la información de conexiones o error en caso de fallo
      */
     @GetMapping("/conexiones/{username}")
     public ResponseEntity<?> obtenerConexiones(@PathVariable String username) {
         try {
-            log.info("📥 Solicitud de conexiones para: {}", username);
-
+            log.info("Solicitud de conexiones para: {}", username);
             Map<String, Object> conexiones =
                     grafoSocialService.obtenerInformacionConexiones(username);
-
             return ResponseEntity.ok(conexiones);
-
         } catch (RuntimeException e) {
-            log.error("❌ Error al obtener conexiones: {}", e.getMessage());
+            log.error("Error al obtener conexiones: {}", e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", true);
             errorResponse.put("mensaje", e.getMessage());
@@ -84,24 +78,23 @@ public class GrafoSocialController {
     }
 
     /**
-     * RF-024: Encontrar camino más corto entre dos usuarios (BFS)
+     * Encuentra el camino más corto entre dos usuarios usando BFS.
      *
-     * GET /api/grafo-social/camino/{origen}/{destino}
+     * @param origen Nombre de usuario de origen
+     * @param destino Nombre de usuario de destino
+     * @return ResponseEntity con el camino encontrado o error en caso de fallo
      */
     @GetMapping("/camino/{origen}/{destino}")
     public ResponseEntity<?> encontrarCamino(
             @PathVariable String origen,
             @PathVariable String destino) {
         try {
-            log.info("📥 Buscando camino: {} → {}", origen, destino);
-
+            log.info("Buscando camino: {} → {}", origen, destino);
             Map<String, Object> camino =
                     grafoSocialService.encontrarCamino(origen, destino);
-
             return ResponseEntity.ok(camino);
-
         } catch (RuntimeException e) {
-            log.error("❌ Error al buscar camino: {}", e.getMessage());
+            log.error("Error al buscar camino: {}", e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", true);
             errorResponse.put("mensaje", e.getMessage());
@@ -110,22 +103,19 @@ public class GrafoSocialController {
     }
 
     /**
-     * Obtener estadísticas generales del grafo
+     * Obtiene estadísticas generales del grafo social.
      *
-     * GET /api/grafo-social/estadisticas
+     * @return ResponseEntity con las estadísticas del grafo o error en caso de fallo
      */
     @GetMapping("/estadisticas")
     public ResponseEntity<?> obtenerEstadisticas() {
         try {
-            log.info("📥 Solicitud de estadísticas del grafo");
-
+            log.info("Solicitud de estadísticas del grafo");
             Map<String, Object> estadisticas =
                     grafoSocialService.obtenerEstadisticas();
-
             return ResponseEntity.ok(estadisticas);
-
         } catch (RuntimeException e) {
-            log.error("❌ Error al obtener estadísticas: {}", e.getMessage());
+            log.error("Error al obtener estadísticas: {}", e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", true);
             errorResponse.put("mensaje", e.getMessage());
@@ -135,26 +125,22 @@ public class GrafoSocialController {
     }
 
     /**
-     * Reconstruir el grafo manualmente (útil para testing)
+     * Reconstruye el grafo social manualmente.
      *
-     * POST /api/grafo-social/reconstruir
+     * @return ResponseEntity con mensaje de éxito o error en caso de fallo
      */
     @PostMapping("/reconstruir")
     public ResponseEntity<?> reconstruirGrafo() {
         try {
-            log.info("📥 Solicitud de reconstrucción del grafo");
-
+            log.info("Solicitud de reconstrucción del grafo");
             grafoSocialService.reconstruirGrafo();
-
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("mensaje", "Grafo reconstruido exitosamente");
             response.put("estadisticas", grafoSocialService.obtenerEstadisticas());
-
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
-            log.error("❌ Error al reconstruir grafo: {}", e.getMessage());
+            log.error("Error al reconstruir grafo: {}", e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", true);
             errorResponse.put("mensaje", e.getMessage());
@@ -164,25 +150,23 @@ public class GrafoSocialController {
     }
 
     /**
-     * Obtener estructura completa del grafo para visualización
-     * Incluye nodos y sus conexiones reales
+     * Obtiene la estructura completa del grafo para visualización.
      *
-     * GET /api/grafo-social/estructura/{username}?profundidad=2
+     * @param username Nombre de usuario central para la estructura
+     * @param profundidad Profundidad máxima de conexiones a mostrar (por defecto 2)
+     * @return ResponseEntity con la estructura del grafo o error en caso de fallo
      */
     @GetMapping("/estructura/{username}")
     public ResponseEntity<?> obtenerEstructuraGrafo(
             @PathVariable String username,
             @RequestParam(defaultValue = "2") int profundidad) {
         try {
-            log.info("📥 Solicitud de estructura del grafo para: {}", username);
-
+            log.info("Solicitud de estructura del grafo para: {}", username);
             Map<String, Object> estructura =
                     grafoSocialService.obtenerEstructuraGrafo(username, profundidad);
-
             return ResponseEntity.ok(estructura);
-
         } catch (RuntimeException e) {
-            log.error("❌ Error al obtener estructura del grafo: {}", e.getMessage());
+            log.error("Error al obtener estructura del grafo: {}", e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", true);
             errorResponse.put("mensaje", e.getMessage());

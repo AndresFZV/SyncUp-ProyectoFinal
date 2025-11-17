@@ -12,6 +12,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controlador REST para gestionar las operaciones de favoritos.
+ * Proporciona endpoints para manejar artistas y álbumes favoritos de los usuarios.
+ */
 @RestController
 @RequestMapping("/api/favoritos")
 @RequiredArgsConstructor
@@ -20,8 +24,12 @@ public class FavoritoController {
 
     private final FavoritoService favoritoService;
 
-    // ========== OBTENER FAVORITOS ==========
-
+    /**
+     * Obtiene la lista de artistas favoritos de un usuario.
+     *
+     * @param username Nombre de usuario del cual obtener los artistas favoritos
+     * @return ResponseEntity con la lista de artistas favoritos o error en caso de fallo
+     */
     @GetMapping("/artistas/{username}")
     public ResponseEntity<?> obtenerArtistasFavoritos(@PathVariable String username) {
         try {
@@ -35,6 +43,12 @@ public class FavoritoController {
         }
     }
 
+    /**
+     * Obtiene la lista de álbumes favoritos de un usuario.
+     *
+     * @param username Nombre de usuario del cual obtener los álbumes favoritos
+     * @return ResponseEntity con la lista de álbumes favoritos o error en caso de fallo
+     */
     @GetMapping("/albumes/{username}")
     public ResponseEntity<?> obtenerAlbumesFavoritos(@PathVariable String username) {
         try {
@@ -48,8 +62,13 @@ public class FavoritoController {
         }
     }
 
-    // ========== VERIFICAR SI ES FAVORITO ==========
-
+    /**
+     * Verifica si un artista está marcado como favorito por un usuario.
+     *
+     * @param username Nombre de usuario a verificar
+     * @param artistaId ID del artista a verificar
+     * @return ResponseEntity con el resultado de la verificación o error en caso de fallo
+     */
     @GetMapping("/artistas/{username}/{artistaId}/check")
     public ResponseEntity<?> verificarArtistaFavorito(
             @PathVariable String username,
@@ -67,6 +86,13 @@ public class FavoritoController {
         }
     }
 
+    /**
+     * Verifica si un álbum está marcado como favorito por un usuario.
+     *
+     * @param username Nombre de usuario a verificar
+     * @param albumId ID del álbum a verificar
+     * @return ResponseEntity con el resultado de la verificación o error en caso de fallo
+     */
     @GetMapping("/albumes/{username}/{albumId}/check")
     public ResponseEntity<?> verificarAlbumFavorito(
             @PathVariable String username,
@@ -84,8 +110,13 @@ public class FavoritoController {
         }
     }
 
-    // ========== AGREGAR A FAVORITOS ==========
-
+    /**
+     * Agrega un artista a la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario al cual agregar el artista favorito
+     * @param artistaId ID del artista a agregar a favoritos
+     * @return ResponseEntity con mensaje de éxito o error en caso de fallo
+     */
     @PostMapping("/artistas/{username}/{artistaId}")
     public ResponseEntity<?> agregarArtistaFavorito(
             @PathVariable String username,
@@ -103,6 +134,13 @@ public class FavoritoController {
         }
     }
 
+    /**
+     * Agrega un álbum a la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario al cual agregar el álbum favorito
+     * @param albumId ID del álbum a agregar a favoritos
+     * @return ResponseEntity con mensaje de éxito o error en caso de fallo
+     */
     @PostMapping("/albumes/{username}/{albumId}")
     public ResponseEntity<?> agregarAlbumFavorito(
             @PathVariable String username,
@@ -120,8 +158,13 @@ public class FavoritoController {
         }
     }
 
-    // ========== ELIMINAR DE FAVORITOS ==========
-
+    /**
+     * Elimina un artista de la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario del cual eliminar el artista favorito
+     * @param artistaId ID del artista a eliminar de favoritos
+     * @return ResponseEntity con mensaje de éxito o error en caso de fallo
+     */
     @DeleteMapping("/artistas/{username}/{artistaId}")
     public ResponseEntity<?> eliminarArtistaFavorito(
             @PathVariable String username,
@@ -139,6 +182,13 @@ public class FavoritoController {
         }
     }
 
+    /**
+     * Elimina un álbum de la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario del cual eliminar el álbum favorito
+     * @param albumId ID del álbum a eliminar de favoritos
+     * @return ResponseEntity con mensaje de éxito o error en caso de fallo
+     */
     @DeleteMapping("/albumes/{username}/{albumId}")
     public ResponseEntity<?> eliminarAlbumFavorito(
             @PathVariable String username,

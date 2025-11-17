@@ -1,7 +1,6 @@
 package com.uniquindio.edu.co.SyncUp.controller;
 
 import com.uniquindio.edu.co.SyncUp.document.Artista;
-import com.uniquindio.edu.co.SyncUp.document.Cancion;
 import com.uniquindio.edu.co.SyncUp.document.Usuario;
 import com.uniquindio.edu.co.SyncUp.services.AdminService;
 import com.uniquindio.edu.co.SyncUp.services.GrafoSocialService;
@@ -14,14 +13,15 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 
+/**
+ * Controlador REST para gestionar las operaciones de usuarios.
+ * Proporciona endpoints para registro, autenticación, perfil, favoritos y relaciones sociales.
+ */
 @RestController
 @RequestMapping("/api/usuarios")
 @RequiredArgsConstructor
@@ -34,6 +34,12 @@ public class UsuarioController {
     @Autowired
     private GrafoSocialService grafoSocialService;
 
+    /**
+     * Registra un nuevo usuario en el sistema.
+     *
+     * @param usuario Objeto Usuario con los datos del usuario a registrar
+     * @return ResponseEntity con el usuario registrado o error en caso de fallo
+     */
     @PostMapping("/registro")
     public ResponseEntity<?> registrarUsuario(@RequestBody Usuario usuario) {
         try {
@@ -44,6 +50,13 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Autentica a un usuario o administrador mediante username y password.
+     *
+     * @param username Nombre de usuario
+     * @param password Contraseña
+     * @return ResponseEntity con el resultado del proceso de autenticación
+     */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestParam String username, @RequestParam String password) {
         try {
@@ -57,6 +70,15 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Actualiza el perfil de un usuario existente.
+     *
+     * @param username Nombre de usuario a actualizar
+     * @param nombre Nuevo nombre (opcional)
+     * @param correo Nuevo correo (opcional)
+     * @param password Nueva contraseña (opcional)
+     * @return ResponseEntity con el usuario actualizado
+     */
     @PutMapping("/{username}")
     public ResponseEntity<?> actualizarPerfil(
             @PathVariable String username,
@@ -66,6 +88,12 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.actualizarPerfil(username, nombre, correo, password));
     }
 
+    /**
+     * Elimina un usuario del sistema.
+     *
+     * @param username Nombre de usuario a eliminar
+     * @return ResponseEntity con mensaje de éxito o error si no se encuentra
+     */
     @DeleteMapping("/{username}")
     public ResponseEntity<?> eliminarUsuario(@PathVariable String username) {
         try {
@@ -79,6 +107,13 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Agrega una canción a la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario
+     * @param body Cuerpo de la solicitud con el ID de la canción
+     * @return ResponseEntity con el usuario actualizado o error en caso de fallo
+     */
     @PostMapping("/{username}/favoritos/canciones")
     public ResponseEntity<?> agregarCancionFavorita(
             @PathVariable String username,
@@ -99,19 +134,36 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Agrega un artista a la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario
+     * @param artista Objeto Artista a agregar a favoritos
+     * @return ResponseEntity con el usuario actualizado
+     */
     @PostMapping("/{username}/favoritos/artistas")
     public ResponseEntity<?> agregarArtistaFavorito(@PathVariable String username, @RequestBody Artista artista) {
         return ResponseEntity.ok(usuarioService.agregarArtistaFavorito(username, artista));
     }
 
+    /**
+     * Sigue a otro usuario en el sistema.
+     *
+     * @param username Nombre de usuario que realiza el seguimiento
+     * @param aSeguir Objeto Usuario a seguir
+     * @return ResponseEntity con el usuario actualizado
+     */
     @PostMapping("/{username}/seguir")
     public ResponseEntity<?> seguirUsuario(@PathVariable String username, @RequestBody Usuario aSeguir) {
         return ResponseEntity.ok(usuarioService.seguirUsuario(username, aSeguir));
     }
 
     /**
-     * Seguir a un usuario por username
-     * ACTUALIZADO: Incluye actualización del grafo
+     * Sigue a un usuario por su username.
+     *
+     * @param username Nombre de usuario que realiza el seguimiento
+     * @param usernameASeguir Nombre de usuario a seguir
+     * @return ResponseEntity con mensaje de éxito o error en caso de fallo
      */
     @PostMapping("/{username}/seguir/{usernameASeguir}")
     public ResponseEntity<?> seguirUsuarioPorUsername(
@@ -121,11 +173,10 @@ public class UsuarioController {
             Usuario usuarioASeguir = usuarioService.buscarIdentificador(usernameASeguir);
             usuarioService.seguirUsuario(username, usuarioASeguir);
 
-            // Actualizar grafo social
             try {
                 grafoSocialService.actualizarSeguimiento(username, usernameASeguir);
             } catch (Exception e) {
-                System.err.println("⚠️ No se pudo actualizar grafo: " + e.getMessage());
+                System.err.println("No se pudo actualizar grafo: " + e.getMessage());
             }
 
             Map<String, String> respuesta = new HashMap<>();
@@ -136,14 +187,24 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Deja de seguir a otro usuario.
+     *
+     * @param username Nombre de usuario que deja de seguir
+     * @param aDejar Objeto Usuario a dejar de seguir
+     * @return ResponseEntity con el usuario actualizado
+     */
     @PostMapping("/{username}/dejar-seguir")
     public ResponseEntity<?> dejarDeSeguirUsuario(@PathVariable String username, @RequestBody Usuario aDejar) {
         return ResponseEntity.ok(usuarioService.dejarDeSeguirUsuario(username, aDejar));
     }
 
     /**
-     * Dejar de seguir a un usuario por username
-     * ACTUALIZADO: Incluye actualización del grafo
+     * Deja de seguir a un usuario por su username.
+     *
+     * @param username Nombre de usuario que deja de seguir
+     * @param usernameADejarDeSeguir Nombre de usuario a dejar de seguir
+     * @return ResponseEntity con mensaje de éxito o error en caso de fallo
      */
     @PostMapping("/{username}/dejar-seguir/{usernameADejarDeSeguir}")
     public ResponseEntity<?> dejarDeSeguirUsuarioPorUsername(
@@ -153,11 +214,10 @@ public class UsuarioController {
             Usuario usuarioADejarDeSeguir = usuarioService.buscarIdentificador(usernameADejarDeSeguir);
             usuarioService.dejarDeSeguirUsuario(username, usuarioADejarDeSeguir);
 
-            // Actualizar grafo social
             try {
                 grafoSocialService.actualizarDejarDeSeguir(username, usernameADejarDeSeguir);
             } catch (Exception e) {
-                System.err.println("⚠️ No se pudo actualizar grafo: " + e.getMessage());
+                System.err.println("No se pudo actualizar grafo: " + e.getMessage());
             }
 
             Map<String, String> respuesta = new HashMap<>();
@@ -171,6 +231,11 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Obtiene la lista de todos los usuarios del sistema.
+     *
+     * @return ResponseEntity con la lista de usuarios simplificada
+     */
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> listarUsuarios() {
         try {
@@ -182,7 +247,7 @@ public class UsuarioController {
                         data.put("nombre", usuario.getNombre());
                         data.put("correo", usuario.getCorreo());
                         data.put("edad", usuario.getEdad());
-                        // Contar seguidores de forma segura
+
                         int cantidadSeguidores = 0;
                         List<String> seguidoresNombres = new ArrayList<>();
                         if (usuario.getSeguidores() != null) {
@@ -195,7 +260,7 @@ public class UsuarioController {
                         }
                         data.put("cantidadSeguidores", cantidadSeguidores);
                         data.put("seguidoresNombres", seguidoresNombres);
-                        // Contar siguiendo de forma segura
+
                         int cantidadSiguiendo = 0;
                         List<String> siguiendoNombres = new ArrayList<>();
                         if (usuario.getSiguiendo() != null) {
@@ -218,6 +283,12 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Busca un usuario por su identificador (username o correo).
+     *
+     * @param identificador Username o correo del usuario a buscar
+     * @return ResponseEntity con la información básica del usuario o error si no existe
+     */
     @GetMapping("/buscar")
     public ResponseEntity<?> buscarUsuario(@RequestParam String identificador) {
         try {
@@ -231,6 +302,12 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Verifica la palabra secreta de un usuario.
+     *
+     * @param datos Mapa con username y palabra secreta
+     * @return ResponseEntity con mensaje de éxito o error
+     */
     @PostMapping("/verificar-palabra-secreta")
     public ResponseEntity<?> verificarPalabraSecreta(@RequestBody Map<String, String> datos) {
         try {
@@ -247,6 +324,12 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Actualiza la contraseña de un usuario.
+     *
+     * @param datos Mapa con username y nueva contraseña
+     * @return ResponseEntity con mensaje de éxito o error
+     */
     @PutMapping("/actualizar-password")
     public ResponseEntity<?> actualizarPassword(@RequestBody Map<String, String> datos) {
         try {
@@ -259,6 +342,11 @@ public class UsuarioController {
         }
     }
 
+    /**
+     * Obtiene los usuarios más seguidos del sistema.
+     *
+     * @return ResponseEntity con la lista de usuarios más seguidos
+     */
     @GetMapping("/mas-seguidos")
     public ResponseEntity<List<Map<String, Object>>> getUsuariosMasSeguidos() {
         try {
@@ -293,12 +381,11 @@ public class UsuarioController {
         }
     }
 
-    // ============================================
-    // ENDPOINTS PARA PERFIL DE USUARIO
-    // ============================================
-
     /**
-     * Obtener perfil completo del usuario
+     * Obtiene el perfil completo de un usuario.
+     *
+     * @param username Nombre de usuario del cual obtener el perfil
+     * @return ResponseEntity con el perfil del usuario o error si no existe
      */
     @GetMapping("/{username}/perfil")
     public ResponseEntity<?> obtenerPerfil(@PathVariable String username) {
@@ -311,7 +398,6 @@ public class UsuarioController {
             perfil.put("correo", usuario.getCorreo());
             perfil.put("edad", usuario.getEdad());
 
-            // Estadísticas
             Map<String, Object> estadisticas = new HashMap<>();
             estadisticas.put("seguidores", usuario.getSeguidores() != null ? usuario.getSeguidores().size() : 0);
             estadisticas.put("siguiendo", usuario.getSiguiendo() != null ? usuario.getSiguiendo().size() : 0);
@@ -332,7 +418,10 @@ public class UsuarioController {
     }
 
     /**
-     * Obtener artistas favoritos del usuario
+     * Obtiene los artistas favoritos de un usuario.
+     *
+     * @param username Nombre de usuario del cual obtener los artistas favoritos
+     * @return ResponseEntity con la lista de artistas favoritos o error si no existe
      */
     @GetMapping("/{username}/favoritos/artistas")
     public ResponseEntity<?> obtenerArtistasFavoritos(@PathVariable String username) {
@@ -366,7 +455,10 @@ public class UsuarioController {
     }
 
     /**
-     * Obtener canciones favoritas del usuario
+     * Obtiene las canciones favoritas de un usuario.
+     *
+     * @param username Nombre de usuario del cual obtener las canciones favoritas
+     * @return ResponseEntity con la lista de canciones favoritas o error si no existe
      */
     @GetMapping("/{username}/favoritos/canciones")
     public ResponseEntity<?> obtenerCancionesFavoritas(@PathVariable String username) {
@@ -388,7 +480,6 @@ public class UsuarioController {
                             data.put("imagenUrl", cancion.getImagenUrl());
                             data.put("musica", cancion.getMusica());
 
-                            // Info del artista
                             if (cancion.getArtista() != null) {
                                 data.put("artistaId", cancion.getArtista().getArtistId());
                                 data.put("artistaNombre", cancion.getArtista().getNombre());
@@ -396,7 +487,6 @@ public class UsuarioController {
                                 data.put("artistaNombre", "Desconocido");
                             }
 
-                            // Info del álbum
                             if (cancion.getAlbum() != null) {
                                 data.put("albumId", cancion.getAlbum().getId());
                                 data.put("albumNombre", cancion.getAlbum().getNombre());
@@ -418,7 +508,10 @@ public class UsuarioController {
     }
 
     /**
-     * Obtener usuarios que sigue
+     * Obtiene los usuarios que sigue un usuario específico.
+     *
+     * @param username Nombre de usuario del cual obtener la lista de seguidos
+     * @return ResponseEntity con la lista de usuarios seguidos o error si no existe
      */
     @GetMapping("/{username}/siguiendo")
     public ResponseEntity<?> obtenerSiguiendo(@PathVariable String username) {
@@ -449,7 +542,10 @@ public class UsuarioController {
     }
 
     /**
-     * Obtener seguidores del usuario
+     * Obtiene los seguidores de un usuario específico.
+     *
+     * @param username Nombre de usuario del cual obtener los seguidores
+     * @return ResponseEntity con la lista de seguidores o error si no existe
      */
     @GetMapping("/{username}/seguidores")
     public ResponseEntity<?> obtenerSeguidores(@PathVariable String username) {
@@ -480,7 +576,11 @@ public class UsuarioController {
     }
 
     /**
-     * Eliminar canción de favoritos
+     * Elimina una canción de la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario
+     * @param cancionId ID de la canción a eliminar de favoritos
+     * @return ResponseEntity con mensaje de éxito o error en caso de fallo
      */
     @DeleteMapping("/{username}/favoritos/canciones/{cancionId}")
     public ResponseEntity<?> eliminarCancionFavorita(
@@ -501,7 +601,11 @@ public class UsuarioController {
     }
 
     /**
-     * Eliminar artista de favoritos
+     * Elimina un artista de la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario
+     * @param artistaId ID del artista a eliminar de favoritos
+     * @return ResponseEntity con mensaje de éxito o error en caso de fallo
      */
     @DeleteMapping("/{username}/favoritos/artistas/{artistaId}")
     public ResponseEntity<?> eliminarArtistaFavorito(
@@ -522,7 +626,10 @@ public class UsuarioController {
     }
 
     /**
-     * Obtener álbumes favoritos del usuario
+     * Obtiene los álbumes favoritos de un usuario.
+     *
+     * @param username Nombre de usuario del cual obtener los álbumes favoritos
+     * @return ResponseEntity con la lista de álbumes favoritos o error si no existe
      */
     @GetMapping("/{username}/favoritos/albums")
     public ResponseEntity<?> obtenerAlbumesFavoritos(@PathVariable String username) {
@@ -555,7 +662,11 @@ public class UsuarioController {
     }
 
     /**
-     * Eliminar álbum de favoritos
+     * Elimina un álbum de la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario
+     * @param albumId ID del álbum a eliminar de favoritos
+     * @return ResponseEntity con mensaje de éxito o error en caso de fallo
      */
     @DeleteMapping("/{username}/favoritos/albums/{albumId}")
     public ResponseEntity<?> eliminarAlbumFavorito(
@@ -576,7 +687,11 @@ public class UsuarioController {
     }
 
     /**
-     * Verificar si el usuario actual sigue a otro usuario
+     * Verifica si un usuario sigue a otro usuario.
+     *
+     * @param username Nombre de usuario que realiza la verificación
+     * @param usernameObjetivo Nombre de usuario objetivo a verificar
+     * @return ResponseEntity con el resultado de la verificación o error si no existe
      */
     @GetMapping("/{username}/sigue/{usernameObjetivo}")
     public ResponseEntity<?> verificarSiSigue(
@@ -603,16 +718,17 @@ public class UsuarioController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
+
     /**
-     * RF-009: Descargar reporte completo del usuario en formato CSV
+     * Descarga un reporte completo del usuario en formato CSV.
      *
-     * GET /api/usuarios/reporte/{username}
+     * @param username Nombre de usuario del cual generar el reporte
+     * @return ResponseEntity con el archivo CSV o error en caso de fallo
      */
     @GetMapping(value = "/reporte/{username}", produces = "text/csv")
     public ResponseEntity<byte[]> descargarReporteUsuario(@PathVariable String username) {
         try {
             String csv = usuarioService.generarReporteCSV(username);
-            // Convertir a bytes con UTF-8 BOM para Excel
             byte[] csvBytes = ("\uFEFF" + csv).getBytes(StandardCharsets.UTF_8);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.parseMediaType("text/csv; charset=UTF-8"));
@@ -631,16 +747,14 @@ public class UsuarioController {
     }
 
     /**
-     * RF-010: Descargar reporte global del sistema (Solo Administradores)
-     * Incluye: todas las canciones, usuarios, artistas, álbumes
+     * Descarga un reporte global del sistema en formato CSV (solo para administradores).
      *
-     * GET /api/usuarios/reporte-global
+     * @return ResponseEntity con el archivo CSV del reporte global o error en caso de fallo
      */
     @GetMapping(value = "/reporte-global", produces = "text/csv")
     public ResponseEntity<byte[]> descargarReporteGlobal() {
         try {
             String csv = usuarioService.generarReporteGlobalCSV();
-            // Convertir a bytes con UTF-8 BOM para Excel
             byte[] csvBytes = ("\uFEFF" + csv).getBytes(StandardCharsets.UTF_8);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.parseMediaType("text/csv; charset=UTF-8"));
@@ -659,8 +773,11 @@ public class UsuarioController {
     }
 
     /**
-     * Agregar canción a favoritas
-     * POST /api/usuarios/{username}/favoritos/canciones/{cancionId}
+     * Agrega una canción a la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario
+     * @param cancionId ID de la canción a agregar a favoritos
+     * @return ResponseEntity con mensaje de éxito o error en caso de fallo
      */
     @PostMapping("/{username}/favoritos/canciones/{cancionId}")
     public ResponseEntity<Map<String, String>> agregarCancionFavorita(
@@ -678,10 +795,12 @@ public class UsuarioController {
         }
     }
 
-
     /**
-     * Verificar si una canción es favorita
-     * GET /api/usuarios/{username}/favoritos/canciones/{cancionId}/check
+     * Verifica si una canción está en la lista de favoritos de un usuario.
+     *
+     * @param username Nombre de usuario
+     * @param cancionId ID de la canción a verificar
+     * @return ResponseEntity con el resultado de la verificación
      */
     @GetMapping("/{username}/favoritos/canciones/{cancionId}/check")
     public ResponseEntity<Map<String, Boolean>> verificarCancionFavorita(
