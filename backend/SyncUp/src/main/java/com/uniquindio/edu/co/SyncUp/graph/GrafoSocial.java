@@ -8,39 +8,51 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Implementación de Grafo No Dirigido para modelar conexiones sociales
- * RF-023: Grafo No Dirigido
- * RF-024: Recorridos BFS para "amigos de amigos"
+ * Implementación de Grafo No Dirigido para modelar conexiones sociales entre usuarios.
+ * Proporciona funcionalidades para análisis de relaciones y sugerencias de conexiones.
+ *
+ * @author SyncUp Team
+ * @version 1.0
  */
 @Slf4j
 @Component
 public class GrafoSocial {
 
-    // Representación del grafo como lista de adyacencias
+    /**
+     * Mapa de nodos del grafo, donde la clave es el username del usuario.
+     */
     private Map<String, Nodo> nodos;
+
+    /**
+     * Mapa de adyacencias que representa las conexiones entre usuarios.
+     */
     private Map<String, Set<String>> adyacencias;
 
-    // Configuración
+    /**
+     * Configuración para límites de búsqueda en el grafo.
+     */
     private static final int MAX_NIVEL_BFS = 3;
     private static final int MAX_SUGERENCIAS = 10;
 
+    /**
+     * Constructor que inicializa el grafo vacío.
+     */
     public GrafoSocial() {
         this.nodos = new HashMap<>();
         this.adyacencias = new HashMap<>();
     }
 
     /**
-     * Construir el grafo desde una lista de usuarios
-     * RF-023: Implementación como Grafo No Dirigido
+     * Construye el grafo social a partir de una lista de usuarios.
+     *
+     * @param usuarios Lista de usuarios para construir el grafo
      */
     public void construirGrafo(List<Usuario> usuarios) {
-        log.info("🔨 Construyendo grafo social con {} usuarios", usuarios.size());
+        log.info("Construyendo grafo social con {} usuarios", usuarios.size());
 
-        // Limpiar grafo anterior
         nodos.clear();
         adyacencias.clear();
 
-        // 1. Crear nodos
         for (Usuario usuario : usuarios) {
             if (usuario == null) continue;
 
@@ -58,7 +70,6 @@ public class GrafoSocial {
             adyacencias.put(usuario.getUsername(), new HashSet<>());
         }
 
-        // 2. Crear aristas (conexiones bidireccionales)
         for (Usuario usuario : usuarios) {
             if (usuario == null || usuario.getSiguiendo() == null) continue;
 
@@ -68,36 +79,37 @@ public class GrafoSocial {
                 if (seguido == null) continue;
 
                 String usernameSeguido = seguido.getUsername();
-
-                // Conexión bidireccional (Grafo No Dirigido)
                 agregarConexion(username, usernameSeguido);
             }
         }
 
-        log.info("✅ Grafo construido: {} nodos, {} aristas",
+        log.info("Grafo construido: {} nodos, {} aristas",
                 nodos.size(), contarAristas());
     }
 
     /**
-     * Agregar una conexión bidireccional entre dos usuarios
-     * RF-023: Grafo No Dirigido
+     * Agrega una conexión bidireccional entre dos usuarios.
+     *
+     * @param username1 Primer usuario de la conexión
+     * @param username2 Segundo usuario de la conexión
      */
     public void agregarConexion(String username1, String username2) {
         if (!nodos.containsKey(username1) || !nodos.containsKey(username2)) {
             return;
         }
 
-        // Agregar en ambas direcciones (No Dirigido)
         adyacencias.get(username1).add(username2);
         adyacencias.get(username2).add(username1);
 
-        // Actualizar nodos
         nodos.get(username1).agregarConexion(username2);
         nodos.get(username2).agregarConexion(username1);
     }
 
     /**
-     * Eliminar una conexión bidireccional
+     * Elimina una conexión bidireccional entre dos usuarios.
+     *
+     * @param username1 Primer usuario de la conexión
+     * @param username2 Segundo usuario de la conexión
      */
     public void eliminarConexion(String username1, String username2) {
         if (adyacencias.containsKey(username1) && adyacencias.containsKey(username2)) {
@@ -110,14 +122,21 @@ public class GrafoSocial {
     }
 
     /**
-     * Obtener vecinos (conexiones directas) de un usuario
+     * Obtiene los vecinos (conexiones directas) de un usuario.
+     *
+     * @param username Usuario del cual obtener los vecinos
+     * @return Conjunto de usernames de los vecinos directos
      */
     public Set<String> obtenerVecinos(String username) {
         return new HashSet<>(adyacencias.getOrDefault(username, new HashSet<>()));
     }
 
     /**
-     * Verificar si dos usuarios están conectados
+     * Verifica si dos usuarios están conectados directamente.
+     *
+     * @param username1 Primer usuario
+     * @param username2 Segundo usuario
+     * @return true si están conectados, false en caso contrario
      */
     public boolean estanConectados(String username1, String username2) {
         return adyacencias.containsKey(username1) &&
@@ -125,14 +144,20 @@ public class GrafoSocial {
     }
 
     /**
-     * Obtener información de un nodo
+     * Obtiene la información de un nodo específico.
+     *
+     * @param username Username del nodo a obtener
+     * @return Objeto Nodo con la información del usuario
      */
     public Nodo obtenerNodo(String username) {
         return nodos.get(username);
     }
 
     /**
-     * Obtener el grado (número de conexiones) de un usuario
+     * Obtiene el grado (número de conexiones) de un usuario.
+     *
+     * @param username Usuario del cual obtener el grado
+     * @return Número de conexiones del usuario
      */
     public int obtenerGrado(String username) {
         Nodo nodo = nodos.get(username);
@@ -140,32 +165,34 @@ public class GrafoSocial {
     }
 
     /**
-     * Contar el total de aristas en el grafo
+     * Cuenta el total de aristas en el grafo.
+     *
+     * @return Número total de aristas en el grafo
      */
     public int contarAristas() {
         int total = 0;
         for (Set<String> conexiones : adyacencias.values()) {
             total += conexiones.size();
         }
-        return total / 2; // Dividir por 2 porque el grafo es no dirigido
+        return total / 2;
     }
 
     /**
-     * Obtener estadísticas del grafo
+     * Obtiene estadísticas generales del grafo.
+     *
+     * @return Mapa con estadísticas del grafo
      */
     public Map<String, Object> obtenerEstadisticas() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalNodos", nodos.size());
         stats.put("totalAristas", contarAristas());
 
-        // Calcular grado promedio
         double gradoPromedio = nodos.values().stream()
                 .mapToInt(Nodo::getGrado)
                 .average()
                 .orElse(0.0);
         stats.put("gradoPromedio", gradoPromedio);
 
-        // Usuario con más conexiones
         Optional<Nodo> nodoMaxGrado = nodos.values().stream()
                 .max(Comparator.comparingInt(Nodo::getGrado));
 
@@ -179,11 +206,13 @@ public class GrafoSocial {
     }
 
     /**
-     * RF-024: Obtener "amigos de amigos" usando BFS
-     * Retorna usuarios a distancia 2 del usuario origen
+     * Obtiene los "amigos de amigos" de un usuario usando BFS.
+     *
+     * @param username Usuario de referencia
+     * @return Conjunto de usernames de amigos de amigos
      */
     public Set<String> obtenerAmigosDeAmigos(String username) {
-        log.info("🔍 Buscando amigos de amigos para: {}", username);
+        log.info("Buscando amigos de amigos para: {}", username);
 
         Set<String> amigosDeAmigos = AlgoritmoBFS.obtenerUsuariosEnNivel(
                 adyacencias,
@@ -191,26 +220,37 @@ public class GrafoSocial {
                 2
         );
 
-        log.info("✅ Encontrados {} amigos de amigos", amigosDeAmigos.size());
+        log.info("Encontrados {} amigos de amigos", amigosDeAmigos.size());
         return amigosDeAmigos;
     }
 
     /**
-     * RF-024: Encontrar camino más corto usando BFS
+     * Encuentra el camino más corto entre dos usuarios usando BFS.
+     *
+     * @param origen Usuario de origen
+     * @param destino Usuario de destino
+     * @return Lista ordenada del camino más corto, o null si no existe
      */
     public List<String> encontrarCamino(String origen, String destino) {
         return AlgoritmoBFS.encontrarCaminoMasCorto(adyacencias, origen, destino);
     }
 
     /**
-     * RF-024: Calcular grado de separación usando BFS
+     * Calcula el grado de separación entre dos usuarios.
+     *
+     * @param origen Usuario de origen
+     * @param destino Usuario de destino
+     * @return Distancia entre los usuarios, o -1 si no están conectados
      */
     public int calcularGradoSeparacion(String origen, String destino) {
         return AlgoritmoBFS.calcularDistancia(adyacencias, origen, destino);
     }
 
     /**
-     * Obtener información de conexiones de un usuario
+     * Obtiene información completa de las conexiones de un usuario.
+     *
+     * @param username Usuario del cual obtener la información
+     * @return Mapa con información de conexiones del usuario
      */
     public Map<String, Object> obtenerInformacionConexiones(String username) {
         Map<String, Object> info = new HashMap<>();
@@ -225,7 +265,6 @@ public class GrafoSocial {
         info.put("grado", nodo.getGrado());
         info.put("conexionesDirectas", obtenerVecinos(username));
 
-        // Amigos de amigos
         Set<String> amigosDeAmigos = obtenerAmigosDeAmigos(username);
         info.put("amigosDeAmigos", amigosDeAmigos);
         info.put("totalAmigosDeAmigos", amigosDeAmigos.size());
@@ -234,21 +273,27 @@ public class GrafoSocial {
     }
 
     /**
-     * Verificar si el grafo está vacío
+     * Verifica si el grafo está vacío.
+     *
+     * @return true si el grafo no contiene nodos, false en caso contrario
      */
     public boolean estaVacio() {
         return nodos.isEmpty();
     }
 
     /**
-     * Obtener el mapa de adyacencias (para algoritmos externos)
+     * Obtiene una copia del mapa de adyacencias.
+     *
+     * @return Copia del mapa de adyacencias
      */
     public Map<String, Set<String>> getAdyacencias() {
         return new HashMap<>(adyacencias);
     }
 
     /**
-     * Obtener todos los nodos
+     * Obtiene una copia de todos los nodos del grafo.
+     *
+     * @return Copia del mapa de nodos
      */
     public Map<String, Nodo> getNodos() {
         return new HashMap<>(nodos);

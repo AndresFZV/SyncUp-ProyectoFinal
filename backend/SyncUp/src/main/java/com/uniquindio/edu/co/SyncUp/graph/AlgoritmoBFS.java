@@ -6,69 +6,76 @@ import lombok.Data;
 import java.util.*;
 
 /**
- * Implementación del algoritmo BFS (Breadth-First Search)
- * para recorrer el grafo social
+ * Implementación del algoritmo BFS (Breadth-First Search) para recorrer el grafo social.
+ * Proporciona funcionalidades para análisis de conexiones y caminos entre usuarios.
+ *
+ * @author SyncUp Team
+ * @version 1.0
  */
 public class AlgoritmoBFS {
 
     /**
-     * Resultado de un recorrido BFS
+     * Resultado de un recorrido BFS que contiene distancias, predecesores y niveles.
      */
     @Data
     @AllArgsConstructor
     public static class ResultadoBFS {
-        private Map<String, Integer> distancias;      // Distancia desde origen
-        private Map<String, String> predecesores;     // Para reconstruir caminos
-        private Map<Integer, Set<String>> niveles;    // Usuarios por nivel
+
+        /**
+         * Mapa de distancias desde el nodo origen a cada nodo alcanzable.
+         */
+        private Map<String, Integer> distancias;
+
+        /**
+         * Mapa de predecesores para reconstruir caminos.
+         */
+        private Map<String, String> predecesores;
+
+        /**
+         * Mapa de usuarios organizados por nivel de distancia.
+         */
+        private Map<Integer, Set<String>> niveles;
     }
 
     /**
-     * Ejecutar BFS desde un nodo origen
+     * Ejecuta un recorrido BFS desde un nodo origen en el grafo.
      *
-     * @param grafo Mapa de adyacencias del grafo
-     * @param origen Username del nodo origen
+     * @param grafo Mapa de adyacencias que representa el grafo social
+     * @param origen Username del nodo origen del recorrido
      * @param maxNivel Profundidad máxima del recorrido
-     * @return Resultado del BFS con distancias y niveles
+     * @return Resultado del BFS con distancias, predecesores y niveles
      */
     public static ResultadoBFS ejecutarBFS(Map<String, Set<String>> grafo,
                                            String origen,
                                            int maxNivel) {
 
-        // Estructuras para el resultado
         Map<String, Integer> distancias = new HashMap<>();
         Map<String, String> predecesores = new HashMap<>();
         Map<Integer, Set<String>> niveles = new HashMap<>();
 
-        // Verificar que el origen existe
         if (!grafo.containsKey(origen)) {
             return new ResultadoBFS(distancias, predecesores, niveles);
         }
 
-        // Cola para BFS
         Queue<String> cola = new LinkedList<>();
         Set<String> visitados = new HashSet<>();
 
-        // Inicializar con el origen
         cola.offer(origen);
         visitados.add(origen);
         distancias.put(origen, 0);
         predecesores.put(origen, null);
 
-        // Inicializar nivel 0
         niveles.put(0, new HashSet<>());
         niveles.get(0).add(origen);
 
-        // Recorrido BFS
         while (!cola.isEmpty()) {
             String actual = cola.poll();
             int distanciaActual = distancias.get(actual);
 
-            // Límite de profundidad
             if (distanciaActual >= maxNivel) {
                 continue;
             }
 
-            // Obtener vecinos del nodo actual
             Set<String> vecinos = grafo.getOrDefault(actual, new HashSet<>());
 
             for (String vecino : vecinos) {
@@ -80,7 +87,6 @@ public class AlgoritmoBFS {
                     predecesores.put(vecino, actual);
                     cola.offer(vecino);
 
-                    // Agregar al nivel correspondiente
                     niveles.putIfAbsent(nuevaDistancia, new HashSet<>());
                     niveles.get(nuevaDistancia).add(vecino);
                 }
@@ -91,12 +97,12 @@ public class AlgoritmoBFS {
     }
 
     /**
-     * Obtener usuarios a una distancia específica (nivel)
+     * Obtiene los usuarios a una distancia específica (nivel) del origen.
      *
-     * @param grafo Mapa de adyacencias
-     * @param origen Username origen
-     * @param nivel Nivel deseado (1 = amigos, 2 = amigos de amigos)
-     * @return Set de usernames en ese nivel
+     * @param grafo Mapa de adyacencias del grafo
+     * @param origen Username del nodo origen
+     * @param nivel Nivel deseado (1 = amigos directos, 2 = amigos de amigos)
+     * @return Conjunto de usernames en el nivel especificado
      */
     public static Set<String> obtenerUsuariosEnNivel(Map<String, Set<String>> grafo,
                                                      String origen,
@@ -106,12 +112,12 @@ public class AlgoritmoBFS {
     }
 
     /**
-     * Encontrar el camino más corto entre dos usuarios
+     * Encuentra el camino más corto entre dos usuarios en el grafo.
      *
-     * @param grafo Mapa de adyacencias
-     * @param origen Username origen
-     * @param destino Username destino
-     * @return Lista ordenada del camino, o null si no existe
+     * @param grafo Mapa de adyacencias del grafo
+     * @param origen Username del nodo origen
+     * @param destino Username del nodo destino
+     * @return Lista ordenada del camino más corto, o null si no existe conexión
      */
     public static List<String> encontrarCaminoMasCorto(Map<String, Set<String>> grafo,
                                                        String origen,
@@ -119,12 +125,10 @@ public class AlgoritmoBFS {
 
         ResultadoBFS resultado = ejecutarBFS(grafo, origen, Integer.MAX_VALUE);
 
-        // Verificar si existe camino
         if (!resultado.getDistancias().containsKey(destino)) {
             return null;
         }
 
-        // Reconstruir camino desde destino hasta origen
         List<String> camino = new ArrayList<>();
         String actual = destino;
 
@@ -133,18 +137,17 @@ public class AlgoritmoBFS {
             actual = resultado.getPredecesores().get(actual);
         }
 
-        // Invertir para tener el camino de origen a destino
         Collections.reverse(camino);
         return camino;
     }
 
     /**
-     * Calcular la distancia (grado de separación) entre dos usuarios
+     * Calcula la distancia (grado de separación) entre dos usuarios.
      *
-     * @param grafo Mapa de adyacencias
-     * @param origen Username origen
-     * @param destino Username destino
-     * @return Distancia, o -1 si no están conectados
+     * @param grafo Mapa de adyacencias del grafo
+     * @param origen Username del nodo origen
+     * @param destino Username del nodo destino
+     * @return Distancia entre los usuarios, o -1 si no están conectados
      */
     public static int calcularDistancia(Map<String, Set<String>> grafo,
                                         String origen,
@@ -159,12 +162,12 @@ public class AlgoritmoBFS {
     }
 
     /**
-     * Obtener todos los usuarios alcanzables desde un origen
+     * Obtiene todos los usuarios alcanzables desde un origen dentro de una distancia máxima.
      *
-     * @param grafo Mapa de adyacencias
-     * @param origen Username origen
-     * @param maxDistancia Distancia máxima
-     * @return Set de usernames alcanzables
+     * @param grafo Mapa de adyacencias del grafo
+     * @param origen Username del nodo origen
+     * @param maxDistancia Distancia máxima desde el origen
+     * @return Conjunto de usernames alcanzables dentro de la distancia especificada
      */
     public static Set<String> obtenerUsuariosAlcanzables(Map<String, Set<String>> grafo,
                                                          String origen,
