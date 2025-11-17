@@ -35,9 +35,7 @@ public class PlaylistService {
     public List<CancionDTO> generarDescubrimientoSemanal(String username) {
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
         Set<String> generosFavoritos = new HashSet<>();
-
         if (usuario.getListaFavoritos() != null && !usuario.getListaFavoritos().isEmpty()) {
             for (Cancion cancion : usuario.getListaFavoritos()) {
                 if (cancion.getGenero() != null) {
@@ -45,7 +43,6 @@ public class PlaylistService {
                 }
             }
         }
-
         if (generosFavoritos.isEmpty()) {
             generosFavoritos.addAll(Arrays.asList("Pop", "Rock", "Hip-Hop", "R&B", "Electronic"));
         }
@@ -99,12 +96,12 @@ public class PlaylistService {
 
         List<String> topGeneros = conteoPorGenero.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
-                .limit(6)
+                .limit(10)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
 
         if (topGeneros.isEmpty()) {
-            topGeneros = Arrays.asList("Pop", "Rock", "Hip-Hop", "Reggae", "Electrónica", "R&B");
+            topGeneros = Arrays.asList("Pop", "Rock", "Hip-Hop", "Reggae", "Electrónica", "R&B", "Metal", "Heavy Metal");
         }
 
         Map<String, List<CancionDTO>> mixes = new HashMap<>();
