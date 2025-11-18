@@ -5,7 +5,7 @@
  * básicas del sistema: username y email.
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, vi } from 'vitest';
 import {
   validateUsername,
   validateEmail,

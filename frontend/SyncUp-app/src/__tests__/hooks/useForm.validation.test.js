@@ -7,7 +7,7 @@
  * - Manejo de submit
  */
 
-import { describe, it, expect, jest } from '@jest/globals';
+import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useForm } from '../../hooks/useForm';
 
@@ -101,7 +101,7 @@ describe('useForm Hook - Validación y Submit', () => {
 
   describe('Validación completa del formulario', () => {
     it('debe validar todos los campos al hacer submit', async () => {
-      const mockOnSubmit = jest.fn();
+      const mockOnSubmit = vi.fn();
       const validationRules = {
         username: (value) => 
           !value || value.length < 4
@@ -122,7 +122,7 @@ describe('useForm Hook - Validación y Submit', () => {
       );
       
       await act(async () => {
-        await result.current.handleSubmit({ preventDefault: jest.fn() });
+        await result.current.handleSubmit({ preventDefault: vi.fn() });
       });
       
       expect(result.current.errors.username).toBe('Username inválido');
@@ -131,7 +131,7 @@ describe('useForm Hook - Validación y Submit', () => {
     });
 
     it('debe llamar onSubmit solo si la validación es exitosa', async () => {
-      const mockOnSubmit = jest.fn().mockResolvedValue(undefined);
+      const mockOnSubmit = vi.fn().mockResolvedValue(undefined);
       const validationRules = {
         username: (value) => 
           value && value.length >= 4
@@ -148,7 +148,7 @@ describe('useForm Hook - Validación y Submit', () => {
       );
       
       await act(async () => {
-        await result.current.handleSubmit({ preventDefault: jest.fn() });
+        await result.current.handleSubmit({ preventDefault: vi.fn() });
       });
       
       expect(mockOnSubmit).toHaveBeenCalledWith({ username: 'validuser' });
@@ -159,7 +159,7 @@ describe('useForm Hook - Validación y Submit', () => {
   describe('handleSubmit - Manejo de envío', () => {
     it('debe establecer isSubmitting durante el envío', async () => {
       let resolveSubmit;
-      const mockOnSubmit = jest.fn(() => 
+      const mockOnSubmit = vi.fn(() =>  // ← CAMBIO AQUÍ: jest.fn() → vi.fn()
         new Promise(resolve => { resolveSubmit = resolve; })
       );
       
@@ -168,7 +168,7 @@ describe('useForm Hook - Validación y Submit', () => {
       );
       
       const submitPromise = act(async () => {
-        await result.current.handleSubmit({ preventDefault: jest.fn() });
+        await result.current.handleSubmit({ preventDefault: vi.fn() });
       });
       
       // Durante el submit
@@ -185,8 +185,8 @@ describe('useForm Hook - Validación y Submit', () => {
     });
 
     it('debe prevenir el comportamiento por defecto del evento', async () => {
-      const mockPreventDefault = jest.fn();
-      const mockOnSubmit = jest.fn().mockResolvedValue(undefined);
+      const mockPreventDefault = vi.fn();
+      const mockOnSubmit = vi.fn().mockResolvedValue(undefined);
       
       const { result } = renderHook(() => 
         useForm({ username: 'test' }, mockOnSubmit)
@@ -202,7 +202,7 @@ describe('useForm Hook - Validación y Submit', () => {
     });
 
     it('debe manejar errores en onSubmit', async () => {
-      const mockOnSubmit = jest.fn().mockRejectedValue(
+      const mockOnSubmit = vi.fn().mockRejectedValue(
         new Error('Error de red')
       );
       
@@ -211,7 +211,7 @@ describe('useForm Hook - Validación y Submit', () => {
       );
       
       await act(async () => {
-        await result.current.handleSubmit({ preventDefault: jest.fn() });
+        await result.current.handleSubmit({ preventDefault: vi.fn() });
       });
       
       expect(result.current.errors.submit).toBe('Error de red');
@@ -219,7 +219,7 @@ describe('useForm Hook - Validación y Submit', () => {
     });
 
     it('debe pasar los valores correctos a onSubmit', async () => {
-      const mockOnSubmit = jest.fn().mockResolvedValue(undefined);
+      const mockOnSubmit = vi.fn().mockResolvedValue(undefined);
       const initialValues = {
         username: 'testuser',
         email: 'test@example.com',
@@ -231,21 +231,21 @@ describe('useForm Hook - Validación y Submit', () => {
       );
       
       await act(async () => {
-        await result.current.handleSubmit({ preventDefault: jest.fn() });
+        await result.current.handleSubmit({ preventDefault: vi.fn() });
       });
       
       expect(mockOnSubmit).toHaveBeenCalledWith(initialValues);
     });
 
     it('debe permitir submit sin reglas de validación', async () => {
-      const mockOnSubmit = jest.fn().mockResolvedValue(undefined);
+      const mockOnSubmit = vi.fn().mockResolvedValue(undefined);
       
       const { result } = renderHook(() => 
         useForm({ field: 'value' }, mockOnSubmit, null)
       );
       
       await act(async () => {
-        await result.current.handleSubmit({ preventDefault: jest.fn() });
+        await result.current.handleSubmit({ preventDefault: vi.fn() });
       });
       
       expect(mockOnSubmit).toHaveBeenCalledWith({ field: 'value' });

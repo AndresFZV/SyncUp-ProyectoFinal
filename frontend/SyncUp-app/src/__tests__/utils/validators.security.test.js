@@ -5,7 +5,7 @@
  * de contraseñas y edad del sistema.
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, vi } from 'vitest';
 import {
   validatePassword,
   validatePasswordMatch,

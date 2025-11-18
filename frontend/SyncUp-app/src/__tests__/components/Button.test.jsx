@@ -1,11 +1,8 @@
 /**
  * TEST 7: BUTTON COMPONENT - Pruebas para el componente Button reutilizable
- * 
- * Este archivo contiene pruebas unitarias para el componente Button,
- * verificando su renderizado, variantes, estados y comportamiento.
  */
 
-import { describe, it, expect, jest } from '@jest/globals';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import Button from '../../components/common/Button/Button';
 
@@ -134,7 +131,7 @@ describe('Button Component', () => {
 
   describe('Eventos', () => {
     it('debe llamar onClick cuando se hace click', () => {
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<Button onClick={handleClick}>Click me</Button>);
       
       const button = screen.getByRole('button');
@@ -144,7 +141,7 @@ describe('Button Component', () => {
     });
 
     it('no debe llamar onClick cuando está deshabilitado', () => {
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<Button onClick={handleClick} disabled>Click me</Button>);
       
       const button = screen.getByRole('button');
@@ -154,7 +151,7 @@ describe('Button Component', () => {
     });
 
     it('no debe llamar onClick cuando está en loading', () => {
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<Button onClick={handleClick} loading>Click me</Button>);
       
       const button = screen.getByRole('button');
@@ -164,7 +161,7 @@ describe('Button Component', () => {
     });
 
     it('debe pasar el evento al handler onClick', () => {
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
       render(<Button onClick={handleClick}>Click me</Button>);
       
       const button = screen.getByRole('button');
@@ -220,7 +217,7 @@ describe('Button Component', () => {
 
   describe('Casos de uso reales', () => {
     it('debe funcionar como botón de submit en formulario', () => {
-      const handleSubmit = jest.fn((e) => e.preventDefault());
+      const handleSubmit = vi.fn((e) => e.preventDefault());
       
       render(
         <form onSubmit={handleSubmit}>
@@ -244,7 +241,7 @@ describe('Button Component', () => {
     });
 
     it('debe renderizar botón de acción peligrosa', () => {
-      const handleDelete = jest.fn();
+      const handleDelete = vi.fn();
       render(
         <Button variant="danger" onClick={handleDelete}>
           Eliminar
@@ -259,7 +256,7 @@ describe('Button Component', () => {
     });
 
     it('debe renderizar botón con icono para reproducir música', () => {
-      const handlePlay = jest.fn();
+      const handlePlay = vi.fn();
       const playIcon = <span data-testid="play-icon">▶</span>;
       
       render(

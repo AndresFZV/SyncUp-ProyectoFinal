@@ -5,7 +5,7 @@
  * de texto (capitalización, truncado) y números.
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, vi } from 'vitest';
 import {
   capitalizeFirst,
   truncateText,

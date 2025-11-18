@@ -5,7 +5,7 @@
  * de tiempo y duración de canciones.
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, vi } from 'vitest';
 import {
   formatTime,
   formatDuration,

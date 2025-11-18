@@ -7,7 +7,7 @@
  * - Reset de formulario
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useForm } from '../../hooks/useForm';
 
